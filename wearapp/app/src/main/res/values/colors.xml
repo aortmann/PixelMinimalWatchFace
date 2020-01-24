@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="face_background">#000</color>
+    <color name="face_time">#FFF</color>
+    <color name="face_time_dimmed">#AAA</color>
+    <color name="face_date">#FFF</color>
+    <color name="face_date_dimmed">#888</color>
+</resources>
