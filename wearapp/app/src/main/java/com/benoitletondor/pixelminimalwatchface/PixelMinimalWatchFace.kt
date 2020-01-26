@@ -1,22 +1,23 @@
 package com.benoitletondor.pixelminimalwatchface
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.*
 import android.os.Bundle
+import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
 import android.text.format.DateUtils
 import android.text.format.DateUtils.FORMAT_SHOW_DATE
 import android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY
+import android.util.SparseArray
 import android.view.SurfaceHolder
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.benoitletondor.pixelminimalwatchface.ComplicationConfigRecyclerViewAdapter.ComplicationLocation
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,6 +33,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         private var centerX = 0F
         private var centerY = 0F
+        private var width = 0
+        private var height = 0
 
         @ColorInt private var backgroundColor: Int = 0
         @ColorInt private var timeColor: Int = 0
@@ -45,6 +48,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private lateinit var productSansRegularFont: Typeface
         private lateinit var productSansBoldFont: Typeface
         private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        private lateinit var complicationsHighlightColors: ComplicationColors
+        private lateinit var activeComplicationDataSparseArray: SparseArray<ComplicationData>
+        private lateinit var complicationDrawableSparseArray: SparseArray<ComplicationDrawable>
 
         private var muteMode = false
         private var ambient = false
@@ -61,6 +68,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onCreate(holder: SurfaceHolder) {
             super.onCreate(holder)
 
+            Storage.init(service)
+
             setWatchFaceStyle(
                 WatchFaceStyle.Builder(service)
                     .setAcceptsTapEvents(true)
@@ -69,12 +78,45 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             calendar = Calendar.getInstance()
 
+            initializeComplications()
             initializeBackground()
             initializeWatchFace()
         }
 
+        private fun initializeComplications() {
+            complicationsHighlightColors = Storage.getComplicationColors()
+            activeComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
+
+            val leftComplicationDrawable = ComplicationDrawable(service)
+            val rightComplicationDrawable = ComplicationDrawable(service)
+
+            complicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
+
+            complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
+            complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+
+            setComplicationsActiveAndAmbientColors(complicationsHighlightColors)
+            setActiveComplications(*COMPLICATION_IDS)
+        }
+
         private fun initializeBackground() {
             backgroundColor = ContextCompat.getColor(service, R.color.face_background)
+        }
+
+        private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
+            for (complicationId in COMPLICATION_IDS) {
+                val complicationDrawable = complicationDrawableSparseArray.get(complicationId)
+
+                val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
+                    complicationColors.leftColor
+                } else {
+                    complicationColors.rightColor
+                }
+
+                complicationDrawable.setTextColorActive(primaryComplicationColor)
+                complicationDrawable.setHighlightColorActive(primaryComplicationColor)
+                complicationDrawable.setIconColorActive(primaryComplicationColor)
+            }
         }
 
         private fun initializeWatchFace() {
@@ -163,6 +205,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
             super.onSurfaceChanged(holder, format, width, height)
 
+            this.width = width
+            this.height = height
+
             /*
              * Find the coordinates of the center point on the screen, and ignore the window
              * insets, so that, on round watches with a "chin", the watch face is centered on the
@@ -172,21 +217,35 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             centerY = height / 2f
         }
 
+        override fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData) {
+            super.onComplicationDataUpdate(watchFaceComplicationId, data)
+
+            // Adds/updates active complication data in the array.
+            activeComplicationDataSparseArray.put(watchFaceComplicationId, data)
+
+            // Updates correct ComplicationDrawable with updated data.
+            val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
+            complicationDrawable.setComplicationData(data)
+
+            if( !ambient ) {
+                invalidate()
+            }
+        }
+
         /**
          * Captures tap event (and tap type). The [WatchFaceService.TAP_TYPE_TAP] case can be
          * used for implementing specific logic to handle the gesture.
          */
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
             when (tapType) {
-                WatchFaceService.TAP_TYPE_TOUCH -> {
-                    // The user has started touching the screen.
-                }
-                WatchFaceService.TAP_TYPE_TOUCH_CANCEL -> {
-                    // The user has started a different gesture or otherwise cancelled the tap.
-                }
                 WatchFaceService.TAP_TYPE_TAP -> {
-                    // The user has completed the tap gesture.
-                    // TODO: Add code to handle the tap gesture.
+                    COMPLICATION_IDS.forEach { complicationId ->
+                        val complicationDrawable: ComplicationDrawable = complicationDrawableSparseArray.get(complicationId)
+
+                        if ( complicationDrawable.onTap(x, y) ) {
+                            return
+                        }
+                    }
                 }
             }
 
@@ -221,14 +280,11 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val timeTextBounds = Rect().apply {
                 timePaint.getTextBounds(timeText, 0, timeText.length, this)
             }
-            val timeYOffset = centerY + (timeTextBounds.height() / 2.0f )
+            val timeYOffset = centerY + (timeTextBounds.height() / 2.0f ) - 5f
             val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
             canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
 
-            val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
-            val iconXOffset = centerX - (wearOsImage.width / 2.0f)
-            val iconYOffset = timeYOffset - timeTextBounds.height() - wearOsImage.height - 16f
-            canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, null)
+            drawComplications(canvas, timeYOffset - timeTextBounds.height() - 10f)
 
             val dateText = DateUtils.formatDateTime(service, calendar.timeInMillis, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY)
             val dateTextBounds = Rect().apply {
@@ -239,13 +295,56 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
         }
 
+        private fun drawComplications(canvas: Canvas, bottomY: Float) {
+            val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
+            val sizeOfComplication = width / 5
+
+            val verticalOffset = bottomY.toInt() - sizeOfComplication
+
+            val leftBounds = Rect(
+                (centerX - (wearOsImage.width / 2) - 15f - sizeOfComplication).toInt(),
+                verticalOffset,
+                (centerX - (wearOsImage.width / 2)  - 15f).toInt(),
+                (verticalOffset + sizeOfComplication)
+            )
+
+            val leftComplicationDrawable = complicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
+            leftComplicationDrawable.bounds = leftBounds
+
+            val rightBounds = Rect(
+                (centerX + (wearOsImage.width / 2) + 15f).toInt(),
+                verticalOffset,
+                (centerX + (wearOsImage.width / 2)  + 15f + sizeOfComplication).toInt(),
+                (verticalOffset + sizeOfComplication)
+            )
+
+            val rightComplicationDrawable = complicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
+            rightComplicationDrawable.bounds = rightBounds
+
+            if( !ambient ) {
+                COMPLICATION_IDS.forEach { complicationId ->
+                    val complicationDrawable = complicationDrawableSparseArray.get(complicationId)
+                    complicationDrawable.draw(canvas, calendar.timeInMillis)
+                }
+            }
+
+            val iconXOffset = centerX - (wearOsImage.width / 2.0f)
+            val iconYOffset = leftBounds.top + (leftBounds.height() / 2) - (wearOsImage.height / 2)
+            canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset.toFloat(), null)
+        }
+
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
 
             if (visible) {
                 registerReceiver()
+
                 /* Update time zone in case it changed while we weren't visible. */
                 calendar.timeZone = TimeZone.getDefault()
+
+                complicationsHighlightColors = Storage.getComplicationColors()
+                setComplicationsActiveAndAmbientColors(complicationsHighlightColors)
+
                 invalidate()
             } else {
                 unregisterReceiver()
@@ -267,6 +366,48 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
             registeredTimeZoneReceiver = false
             service.unregisterReceiver(timeZoneReceiver)
+        }
+    }
+
+    companion object {
+        private const val LEFT_COMPLICATION_ID = 100
+        private const val RIGHT_COMPLICATION_ID = 101
+
+        private val COMPLICATION_IDS = intArrayOf(
+            LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID
+        )
+
+        private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
+            intArrayOf(
+                ComplicationData.TYPE_RANGED_VALUE,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_SMALL_IMAGE
+            ),
+            intArrayOf(
+                ComplicationData.TYPE_RANGED_VALUE,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_SMALL_IMAGE
+            )
+        )
+
+        fun getComplicationId(complicationLocation: ComplicationLocation): Int {
+            return when (complicationLocation) {
+                ComplicationLocation.LEFT -> LEFT_COMPLICATION_ID
+                ComplicationLocation.RIGHT -> RIGHT_COMPLICATION_ID
+            }
+        }
+
+        fun getSupportedComplicationTypes(complicationLocation: ComplicationLocation): IntArray {
+            return when (complicationLocation) {
+                ComplicationLocation.LEFT -> COMPLICATION_SUPPORTED_TYPES[0]
+                ComplicationLocation.RIGHT -> COMPLICATION_SUPPORTED_TYPES[1]
+            }
+        }
+
+        fun getComplicationIds(): IntArray {
+            return COMPLICATION_IDS
         }
     }
 }

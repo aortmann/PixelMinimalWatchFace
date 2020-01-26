@@ -20,6 +20,21 @@
         android:theme="@android:style/Theme.DeviceDefault"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
+        <activity android:name=".ColorSelectionActivity" />
+
+        <activity
+            android:name=".ComplicationConfigActivity"
+            android:label="@string/complication_config">
+            <intent-filter>
+                <action android:name="com.benoitletondor.pixelminimalwatchface.CONFIG_COMPLICATION_SIMPLE"/>
+
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name="android.support.wearable.complications.ComplicationHelperActivity"/>
+
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
@@ -34,10 +49,14 @@
                 android:resource="@xml/watch_face" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview"
-                android:resource="@drawable/preview_analog" />
+                android:resource="@drawable/preview" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
-                android:resource="@drawable/preview_analog" />
+                android:resource="@drawable/preview" />
+
+            <meta-data
+                android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                android:value="com.benoitletondor.pixelminimalwatchface.CONFIG_COMPLICATION_SIMPLE"/>
 
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />

@@ -5,4 +5,7 @@
     <color name="face_time_dimmed">#AAA</color>
     <color name="face_date">#FFF</color>
     <color name="face_date_dimmed">#888</color>
+
+    <color name="complication_default_left_color">#FFF</color>
+    <color name="complication_default_right_color">#830</color>
 </resources>

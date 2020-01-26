@@ -1,3 +1,8 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Pixel Minimal Watch Face</string>
+    <string name="complication_config">Complication Config</string>
+    <string name="add_complication">Add Complication</string>
+    <string name="edit_complication">Edit Complication <xliff:g id="name" example="World Clock">%1$s</xliff:g></string>
+
+    <string name="config_complications_color_label">Complications color</string>
 </resources>
