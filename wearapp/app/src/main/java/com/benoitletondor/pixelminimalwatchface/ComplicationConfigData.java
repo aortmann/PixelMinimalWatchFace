@@ -83,7 +83,7 @@ public class ComplicationConfigData {
         ConfigItemType markerColorConfigItem =
                 new ColorConfigItem(
                         context.getString(R.string.config_complications_color_label),
-                        R.drawable.icn_styles,
+                        R.drawable.ic_add_white_24dp,
                         ColorSelectionActivity.class);
         settingsConfigData.add(markerColorConfigItem);
 

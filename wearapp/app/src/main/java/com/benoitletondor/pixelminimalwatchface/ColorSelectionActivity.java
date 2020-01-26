@@ -23,7 +23,8 @@ public class ColorSelectionActivity extends Activity {
         setContentView(R.layout.activity_color_selection_config);
 
         mColorSelectionRecyclerViewAdapter = new ColorSelectionRecyclerViewAdapter(
-            ComplicationConfigData.getColorOptionsDataSet(this)
+            ComplicationConfigData.getColorOptionsDataSet(this),
+            Injection.INSTANCE.getStorage()
         );
 
         mConfigAppearanceWearableRecyclerView = findViewById(R.id.colors_recycler_view);

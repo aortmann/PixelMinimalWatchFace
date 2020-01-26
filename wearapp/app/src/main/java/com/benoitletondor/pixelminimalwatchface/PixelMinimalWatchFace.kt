@@ -24,10 +24,14 @@ import java.util.*
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     override fun onCreateEngine(): Engine {
-        return Engine(this)
+        val storage = Injection.Storage
+        storage.init(this)
+
+        return Engine(this, storage)
     }
 
-    inner class Engine(private val service: WatchFaceService) : CanvasWatchFaceService.Engine() {
+    inner class Engine(private val service: WatchFaceService,
+                       private val storage: Storage) : CanvasWatchFaceService.Engine() {
         private lateinit var calendar: Calendar
         private var registeredTimeZoneReceiver = false
 
@@ -68,8 +72,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onCreate(holder: SurfaceHolder) {
             super.onCreate(holder)
 
-            Storage.init(service)
-
             setWatchFaceStyle(
                 WatchFaceStyle.Builder(service)
                     .setAcceptsTapEvents(true)
@@ -84,7 +86,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun initializeComplications() {
-            complicationsHighlightColors = Storage.getComplicationColors()
+            complicationsHighlightColors = storage.getComplicationColors()
             activeComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             val leftComplicationDrawable = ComplicationDrawable(service)
@@ -342,7 +344,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 /* Update time zone in case it changed while we weren't visible. */
                 calendar.timeZone = TimeZone.getDefault()
 
-                complicationsHighlightColors = Storage.getComplicationColors()
+                complicationsHighlightColors = storage.getComplicationColors()
                 setComplicationsActiveAndAmbientColors(complicationsHighlightColors)
 
                 invalidate()

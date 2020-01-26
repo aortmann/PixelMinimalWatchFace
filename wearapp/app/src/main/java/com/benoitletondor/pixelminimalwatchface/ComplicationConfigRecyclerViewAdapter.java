@@ -18,6 +18,7 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -55,10 +56,14 @@ public class ComplicationConfigRecyclerViewAdapter
     // notifyItemChanged(int position) to avoid flicker and re-inflating the view.
     private PreviewAndComplicationsViewHolder mPreviewAndComplicationsViewHolder;
 
+    @NonNull
+    private Storage mStorage;
+
     public ComplicationConfigRecyclerViewAdapter(
             Context context,
             Class watchFaceServiceClass,
-            ArrayList<ComplicationConfigData.ConfigItemType> settingsDataSet) {
+            ArrayList<ComplicationConfigData.ConfigItemType> settingsDataSet,
+            @NonNull Storage storage) {
 
         mContext = context;
         mWatchFaceComponentName = new ComponentName(mContext, watchFaceServiceClass);
@@ -76,6 +81,8 @@ public class ComplicationConfigRecyclerViewAdapter
         mProviderInfoRetriever =
                 new ProviderInfoRetriever(mContext, Executors.newCachedThreadPool());
         mProviderInfoRetriever.init();
+
+        mStorage = storage;
     }
 
     @NonNull
@@ -133,12 +140,10 @@ public class ComplicationConfigRecyclerViewAdapter
                 ColorPickerViewHolder colorPickerViewHolder = (ColorPickerViewHolder) viewHolder;
                 ComplicationConfigData.ColorConfigItem colorConfigItem = (ComplicationConfigData.ColorConfigItem) configItemType;
 
-                int iconResourceId = colorConfigItem.getIconResourceId();
                 String name = colorConfigItem.getName();
                 Class<ColorSelectionActivity> activity =
                         colorConfigItem.getActivityToChoosePreference();
 
-                colorPickerViewHolder.setIcon(iconResourceId);
                 colorPickerViewHolder.setName(name);
                 colorPickerViewHolder.setLaunchActivityToSelectColor(activity);
                 break;
@@ -162,7 +167,7 @@ public class ComplicationConfigRecyclerViewAdapter
         if (mPreviewAndComplicationsViewHolder != null && mSelectedComplicationId >= 0) {
             mPreviewAndComplicationsViewHolder.updateComplicationViews(
                     mSelectedComplicationId, complicationProviderInfo,
-                    Storage.INSTANCE.getComplicationColors()
+                    mStorage.getComplicationColors()
             );
         }
     }
@@ -175,7 +180,7 @@ public class ComplicationConfigRecyclerViewAdapter
     }
 
     public void updatePreviewColors() {
-        mPreviewAndComplicationsViewHolder.updateComplicationsAccentColor(Storage.INSTANCE.getComplicationColors());
+        mPreviewAndComplicationsViewHolder.updateComplicationsAccentColor(mStorage.getComplicationColors());
     }
 
     /**
@@ -301,7 +306,7 @@ public class ComplicationConfigRecyclerViewAdapter
                                 int watchFaceComplicationId,
                                 @Nullable ComplicationProviderInfo complicationProviderInfo) {
                             updateComplicationViews(
-                                    watchFaceComplicationId, complicationProviderInfo, Storage.INSTANCE.getComplicationColors());
+                                    watchFaceComplicationId, complicationProviderInfo, mStorage.getComplicationColors());
                         }
                     },
                     mWatchFaceComponentName,
@@ -335,10 +340,10 @@ public class ComplicationConfigRecyclerViewAdapter
             mAppearanceButton.setText(name);
         }
 
-        public void setIcon(int resourceId) {
+        public void setIcon() {
             Context context = mAppearanceButton.getContext();
             mAppearanceButton.setCompoundDrawablesWithIntrinsicBounds(
-                    context.getDrawable(resourceId), null, null, null);
+                    ContextCompat.getDrawable(context, R.drawable.ic_palette_white), null, null, null);
         }
 
         public void setLaunchActivityToSelectColor(Class<ColorSelectionActivity> activity) {

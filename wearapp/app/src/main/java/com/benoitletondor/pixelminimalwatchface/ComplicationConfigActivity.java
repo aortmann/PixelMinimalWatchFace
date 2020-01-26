@@ -29,7 +29,8 @@ public class ComplicationConfigActivity extends Activity {
         mAdapter = new ComplicationConfigRecyclerViewAdapter(
                 getApplicationContext(),
                 ComplicationConfigData.getWatchFaceServiceClass(),
-                ComplicationConfigData.getDataToPopulateAdapter(this));
+                ComplicationConfigData.getDataToPopulateAdapter(this),
+                Injection.INSTANCE.getStorage());
 
         mWearableRecyclerView = findViewById(R.id.wearable_recycler_view);
 

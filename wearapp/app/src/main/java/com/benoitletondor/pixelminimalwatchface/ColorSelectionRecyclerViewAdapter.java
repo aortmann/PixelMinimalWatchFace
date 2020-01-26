@@ -14,15 +14,18 @@ public class ColorSelectionRecyclerViewAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<ComplicationColors> mColorOptionsDataSet;
+    @NonNull private final Storage mStorage;
 
-    public ColorSelectionRecyclerViewAdapter(List<ComplicationColors> colorSettingsDataSet) {
+    public ColorSelectionRecyclerViewAdapter(List<ComplicationColors> colorSettingsDataSet,
+                                             @NonNull final Storage storage) {
         mColorOptionsDataSet = colorSettingsDataSet;
+        mStorage = storage;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new ColorViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.color_config_list_item, parent, false));
+                .inflate(R.layout.color_config_list_item, parent, false), mStorage);
     }
 
     @Override
@@ -46,11 +49,14 @@ public class ColorSelectionRecyclerViewAdapter extends
 
         private View mLeftColorView;
         private View mRightColorView;
+        @NonNull private final Storage mStorage;
 
-        public ColorViewHolder(final View view) {
+        public ColorViewHolder(final View view,
+                               @NonNull final Storage storage) {
             super(view);
             mLeftColorView = view.findViewById(R.id.colorLeft);
             mRightColorView = view.findViewById(R.id.colorRight);
+            mStorage = storage;
             view.setOnClickListener(this);
         }
 
@@ -64,7 +70,7 @@ public class ColorSelectionRecyclerViewAdapter extends
             int position = getAdapterPosition();
             ComplicationColors colors = mColorOptionsDataSet.get(position);
 
-            Storage.INSTANCE.setComplicationColors(colors);
+            mStorage.setComplicationColors(colors);
 
             Activity activity = (Activity) view.getContext();
             activity.setResult(Activity.RESULT_OK);
