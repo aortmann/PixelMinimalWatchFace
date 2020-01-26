@@ -15,5 +15,4 @@
 -->
 <resources>
     <dimen name="activity_config_padding">18dp</dimen>
-    <dimen name="complication_settings_preview_size">140dp</dimen>
 </resources>

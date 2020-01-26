@@ -1,4 +1,4 @@
-package com.benoitletondor.pixelminimalwatchface
+package com.benoitletondor.pixelminimalwatchface.helper
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

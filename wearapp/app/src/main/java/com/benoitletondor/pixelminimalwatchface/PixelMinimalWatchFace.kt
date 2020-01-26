@@ -17,8 +17,10 @@ import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import com.benoitletondor.pixelminimalwatchface.ComplicationConfigRecyclerViewAdapter.ComplicationLocation
-import java.lang.IllegalStateException
+import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
+import com.benoitletondor.pixelminimalwatchface.model.Storage
+import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
+import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,7 +34,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
     }
 
     inner class Engine(private val service: WatchFaceService,
-                       private val storage: Storage) : CanvasWatchFaceService.Engine() {
+                       private val storage: Storage
+    ) : CanvasWatchFaceService.Engine() {
         private lateinit var calendar: Calendar
         private var registeredTimeZoneReceiver = false
 
@@ -51,7 +54,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private lateinit var wearOSLogo: Bitmap
         private lateinit var wearOSLogoAmbient: Bitmap
         private lateinit var productSansRegularFont: Typeface
-        private lateinit var productSansBoldFont: Typeface
         private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
         private lateinit var complicationsHighlightColors: ComplicationColors
@@ -126,7 +128,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             wearOSLogo = ContextCompat.getDrawable(service, R.drawable.ic_wear_os_logo)!!.toBitmap()
             wearOSLogoAmbient = ContextCompat.getDrawable(service, R.drawable.ic_wear_os_logo_ambient)!!.toBitmap()
             productSansRegularFont = ResourcesCompat.getFont(service, R.font.product_sans_regular)!!
-            productSansBoldFont = ResourcesCompat.getFont(service, R.font.product_sans_bold)!!
             timeColor = ContextCompat.getColor(service, R.color.face_time)
             timeColorDimmed = ContextCompat.getColor(service, R.color.face_time_dimmed)
             dateColor = ContextCompat.getColor(service, R.color.face_date)
@@ -235,10 +236,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
         }
 
-        /**
-         * Captures tap event (and tap type). The [WatchFaceService.TAP_TYPE_TAP] case can be
-         * used for implementing specific logic to handle the gesture.
-         */
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
             when (tapType) {
                 WatchFaceService.TAP_TYPE_TAP -> {
@@ -251,8 +248,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                     }
                 }
             }
-
-            invalidate()
         }
 
 

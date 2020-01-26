@@ -20,10 +20,10 @@
         android:theme="@android:style/Theme.DeviceDefault"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
-        <activity android:name=".ColorSelectionActivity" />
+        <activity android:name=".settings.ColorSelectionActivity" />
 
         <activity
-            android:name=".ComplicationConfigActivity"
+            android:name=".settings.ComplicationConfigActivity"
             android:label="@string/complication_config">
             <intent-filter>
                 <action android:name="com.benoitletondor.pixelminimalwatchface.CONFIG_COMPLICATION_SIMPLE"/>

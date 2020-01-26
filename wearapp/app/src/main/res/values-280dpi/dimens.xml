@@ -15,6 +15,4 @@
 -->
 <resources>
     <dimen name="activity_config_padding">24dp</dimen>
-    <dimen name="complication_settings_preview_size">180dp</dimen>
-    <dimen name="complication_color_picker_size">70dp</dimen>
 </resources>

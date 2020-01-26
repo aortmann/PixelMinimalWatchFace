@@ -1,10 +1,12 @@
-package com.benoitletondor.pixelminimalwatchface
+package com.benoitletondor.pixelminimalwatchface.settings
 
 import android.app.Activity
 import android.os.Bundle
 import androidx.wear.widget.WearableLinearLayoutManager
 import androidx.wear.widget.WearableRecyclerView
-import com.benoitletondor.pixelminimalwatchface.Injection.Storage
+import com.benoitletondor.pixelminimalwatchface.Injection
+import com.benoitletondor.pixelminimalwatchface.R
+import com.benoitletondor.pixelminimalwatchface.model.ComplicationColorsProvider
 
 class ColorSelectionActivity : Activity() {
     private lateinit var colorsRecyclerView: WearableRecyclerView
@@ -13,7 +15,7 @@ class ColorSelectionActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_color_selection_config)
 
-        val storage = Storage
+        val storage = Injection.Storage
         val availableColors = ComplicationColorsProvider.getColorOptionsDataSet(this)
 
         val adapter = ColorSelectionRecyclerViewAdapter(
