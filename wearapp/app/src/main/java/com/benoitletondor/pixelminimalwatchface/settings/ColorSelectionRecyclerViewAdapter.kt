@@ -34,10 +34,11 @@ class ColorSelectionRecyclerViewAdapter(
 class ColorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val leftColorView: View = view.findViewById(R.id.colorLeft)
     private val rightColorView: View = view.findViewById(R.id.colorRight)
+    private val colorsContainer: ViewGroup = view.findViewById(R.id.color_config_list_item_colors_container)
     private val colorLabelTextView: TextView = view.findViewById(R.id.color_config_list_item_color_label)
 
     init {
-        itemView.clipToOutline = true
+        colorsContainer.clipToOutline = true
     }
 
     fun setItem(item: ComplicationColors,
