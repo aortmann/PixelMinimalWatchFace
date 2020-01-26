@@ -5,4 +5,27 @@
     <string name="edit_complication">Edit Complication <xliff:g id="name" example="World Clock">%1$s</xliff:g></string>
 
     <string name="config_complications_color_label">Complications color</string>
+
+    <string name="color_default">Wear OS</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_light_blue">Light blue</string>
+    <string name="color_grey">Grey</string>
+    <string name="color_blue_grey">Blue grey</string>
+    <string name="color_green">Green</string>
+    <string name="color_navy">Navy</string>
+    <string name="color_red">Red</string>
+    <string name="color_white">White</string>
+    <string name="color_amber">Amber</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_deep_orange">Deep orange</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_deep_purple">Deep purple</string>
+    <string name="color_indigo">Indigo</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_lime_green">Lime green</string>
+    <string name="color_lime">Lime</string>
+    <string name="color_brown">Brown</string>
 </resources>

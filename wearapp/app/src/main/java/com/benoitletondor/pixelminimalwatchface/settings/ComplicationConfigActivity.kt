@@ -25,6 +25,12 @@ class ComplicationConfigActivity : Activity() {
         wearable_recycler_view.adapter = adapter
     }
 
+    override fun onDestroy() {
+        adapter.onDestroy()
+
+        super.onDestroy()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == COMPLICATION_CONFIG_REQUEST_CODE && resultCode == RESULT_OK) {
             val complicationProviderInfo: ComplicationProviderInfo? = data?.getParcelableExtra(ProviderChooserIntent.EXTRA_PROVIDER_INFO)

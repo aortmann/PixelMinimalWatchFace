@@ -3,6 +3,7 @@ package com.benoitletondor.pixelminimalwatchface.settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.benoitletondor.pixelminimalwatchface.R
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
@@ -33,11 +34,17 @@ class ColorSelectionRecyclerViewAdapter(
 class ColorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val leftColorView: View = view.findViewById(R.id.colorLeft)
     private val rightColorView: View = view.findViewById(R.id.colorRight)
+    private val colorLabelTextView: TextView = view.findViewById(R.id.color_config_list_item_color_label)
+
+    init {
+        itemView.clipToOutline = true
+    }
 
     fun setItem(item: ComplicationColors,
                 onClickListener: () -> Unit) {
         leftColorView.setBackgroundColor(item.leftColor)
         rightColorView.setBackgroundColor(item.rightColor)
+        colorLabelTextView.text = item.label
 
         itemView.setOnClickListener {
             onClickListener()

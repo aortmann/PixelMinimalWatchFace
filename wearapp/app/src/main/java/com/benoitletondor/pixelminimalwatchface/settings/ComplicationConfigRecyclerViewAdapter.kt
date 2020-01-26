@@ -139,7 +139,10 @@ class ComplicationConfigRecyclerViewAdapter(
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
 
-        // Required to release retriever for active complication data on detach.
+        onDestroy()
+    }
+
+    fun onDestroy() {
         providerInfoRetriever.release()
     }
 

@@ -36,6 +36,7 @@ class StorageImpl : Storage {
         return ComplicationColors(
             color,
             color,
+            "TODO", // FIXME
             false
         )
     }
