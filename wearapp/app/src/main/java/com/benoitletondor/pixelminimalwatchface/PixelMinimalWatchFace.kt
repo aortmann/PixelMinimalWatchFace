@@ -118,9 +118,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                     complicationColors.rightColor
                 }
 
-                complicationDrawable.setTextColorActive(primaryComplicationColor)
-                complicationDrawable.setHighlightColorActive(primaryComplicationColor)
                 complicationDrawable.setIconColorActive(primaryComplicationColor)
+                complicationDrawable.setTextColorActive(primaryComplicationColor)
             }
         }
 
@@ -198,7 +197,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             super.onInterruptionFilterChanged(interruptionFilter)
             val inMuteMode = interruptionFilter == WatchFaceService.INTERRUPTION_FILTER_NONE
 
-            /* Dim display in mute mode. */
             if (muteMode != inMuteMode) {
                 muteMode = inMuteMode
 

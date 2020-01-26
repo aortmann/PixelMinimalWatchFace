@@ -6,6 +6,6 @@
     <color name="face_date">#FFF</color>
     <color name="face_date_dimmed">#888</color>
 
-    <color name="complication_default_left_color">#FFF</color>
-    <color name="complication_default_right_color">#830</color>
+    <color name="complication_default_left_color">#f2bd00</color>
+    <color name="complication_default_right_color">#da482f</color>
 </resources>
