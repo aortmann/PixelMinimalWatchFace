@@ -22,7 +22,7 @@ object ComplicationColorsProvider {
         )
     }
 
-    fun getColorOptionsDataSet(context: Context): List<ComplicationColors> {
+    fun getAllComplicationColors(context: Context): List<ComplicationColors> {
         return listOf(
             getDefaultComplicationColors(
                 context

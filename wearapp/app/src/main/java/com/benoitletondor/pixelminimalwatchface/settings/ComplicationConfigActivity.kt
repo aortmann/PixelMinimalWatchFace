@@ -6,12 +6,11 @@ import android.os.Bundle
 import android.support.wearable.complications.ComplicationProviderInfo
 import android.support.wearable.complications.ProviderChooserIntent
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.wear.widget.WearableRecyclerView
 import com.benoitletondor.pixelminimalwatchface.Injection
 import com.benoitletondor.pixelminimalwatchface.R
+import kotlinx.android.synthetic.main.activity_complication_config.*
 
 class ComplicationConfigActivity : Activity() {
-    private lateinit var wearableRecyclerView: WearableRecyclerView
     private lateinit var adapter: ComplicationConfigRecyclerViewAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,11 +19,10 @@ class ComplicationConfigActivity : Activity() {
 
         adapter = ComplicationConfigRecyclerViewAdapter(this, Injection.Storage)
 
-        wearableRecyclerView = findViewById(R.id.wearable_recycler_view)
-        wearableRecyclerView.isEdgeItemsCenteringEnabled = true
-        wearableRecyclerView.layoutManager = LinearLayoutManager(this)
-        wearableRecyclerView.setHasFixedSize(true)
-        wearableRecyclerView.adapter = adapter
+        wearable_recycler_view.isEdgeItemsCenteringEnabled = true
+        wearable_recycler_view.layoutManager = LinearLayoutManager(this)
+        wearable_recycler_view.setHasFixedSize(true)
+        wearable_recycler_view.adapter = adapter
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
