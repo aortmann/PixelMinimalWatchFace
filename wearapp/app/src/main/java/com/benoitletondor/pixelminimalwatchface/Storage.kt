@@ -26,7 +26,7 @@ class StorageImpl : Storage {
     override fun getComplicationColors(): ComplicationColors {
         val color = sharedPreferences.getInt(KEY_COMPLICATION_COLORS, DEFAULT_COMPLICATION_COLOR)
         if( color == DEFAULT_COMPLICATION_COLOR ) {
-            return ComplicationConfigData.getDefaultComplicationColors(appContext)
+            return ComplicationColorsProvider.getDefaultComplicationColors(appContext)
         }
 
         return ComplicationColors(color, color, false)

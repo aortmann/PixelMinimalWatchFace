@@ -18,6 +18,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.benoitletondor.pixelminimalwatchface.ComplicationConfigRecyclerViewAdapter.ComplicationLocation
+import java.lang.IllegalStateException
 import java.text.SimpleDateFormat
 import java.util.*
 

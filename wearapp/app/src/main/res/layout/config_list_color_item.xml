@@ -19,4 +19,5 @@
     android:id="@+id/color_picker_button"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:text="@string/config_complications_color_label"
     style="@style/ButtonConfigurationStyle" />
