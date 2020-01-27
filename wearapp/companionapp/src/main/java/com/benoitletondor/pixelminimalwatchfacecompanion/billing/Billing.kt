@@ -1,5 +1,18 @@
 package com.benoitletondor.pixelminimalwatchfacecompanion.billing
 
-interface Billing {
+import android.app.Activity
+import androidx.lifecycle.LiveData
 
+interface Billing {
+    val userPremiumEventStream: LiveData<Boolean>
+
+    fun isUserPremium(): Boolean
+    fun updateIAPStatusIfNeeded()
+    suspend fun launchPremiumPurchaseFlow(activity: Activity): PremiumPurchaseFlowResult
+}
+
+sealed class PremiumPurchaseFlowResult {
+    object Cancelled : PremiumPurchaseFlowResult()
+    object Success : PremiumPurchaseFlowResult()
+    class Error(val reason: String): PremiumPurchaseFlowResult()
 }
