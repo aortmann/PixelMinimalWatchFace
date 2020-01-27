@@ -4,7 +4,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="20dp">
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:id="@+id/complication_configuration_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/complication_config"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="5dp"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <ImageView
         android:id="@+id/left_complication_background"
@@ -13,8 +25,9 @@
         android:src="@drawable/added_complication"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
+        android:layout_marginTop="10dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton
         android:id="@+id/left_complication"
@@ -22,8 +35,8 @@
         android:layout_height="wrap_content"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintStart_toStartOf="@+id/left_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/left_complication_background"/>
 
     <ImageView
         android:id="@+id/right_complication_background"
@@ -32,8 +45,9 @@
         android:src="@drawable/added_complication"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton
         android:id="@+id/right_complication"
@@ -41,7 +55,7 @@
         android:layout_height="wrap_content"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/right_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/right_complication_background" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

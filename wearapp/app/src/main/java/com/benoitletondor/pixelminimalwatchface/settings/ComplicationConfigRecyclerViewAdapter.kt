@@ -15,7 +15,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.benoitletondor.pixelminimalwatchface.BuildConfig
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationId
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationIds
@@ -25,8 +27,10 @@ import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.util.concurrent.Executors
 
-private const val TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG = 0
-private const val TYPE_COLOR_CONFIG = 1
+private const val TYPE_HEADER = 0
+private const val TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG = 1
+private const val TYPE_COLOR_CONFIG = 2
+private const val TYPE_FOOTER = 3
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -41,6 +45,13 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
+            TYPE_HEADER -> return HeaderViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_header,
+                    parent,
+                    false
+                )
+            )
             TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG -> {
                 previewAndComplicationsViewHolder =
                     PreviewAndComplicationsViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.config_list_preview_and_complications_item, parent, false)) { location ->
@@ -67,6 +78,13 @@ class ComplicationConfigRecyclerViewAdapter(
             TYPE_COLOR_CONFIG -> return ColorPickerViewHolder(
                 LayoutInflater.from(parent.context).inflate(
                     R.layout.config_list_color_item,
+                    parent,
+                    false
+                )
+            )
+            TYPE_FOOTER -> return FooterViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_footer,
                     parent,
                     false
                 )
@@ -106,15 +124,16 @@ class ComplicationConfigRecyclerViewAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == 0) {
-            TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
-        } else {
-            TYPE_COLOR_CONFIG
+        return when (position) {
+            0 -> TYPE_HEADER
+            1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
+            2 -> TYPE_COLOR_CONFIG
+            else -> TYPE_FOOTER
         }
     }
 
     override fun getItemCount(): Int {
-        return 2
+        return 4
     }
 
     /** Updates the selected complication id saved earlier with the new information.  */
@@ -250,5 +269,15 @@ class PreviewAndComplicationsViewHolder(
         } else {
             leftComplication.setColorFilter(colors.leftColor)
         }
+    }
+}
+
+class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
+class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private val versionTextView: TextView = view.findViewById(R.id.app_version)
+
+    init {
+        versionTextView.text = versionTextView.context.getString(R.string.config_version, BuildConfig.VERSION_NAME)
     }
 }
