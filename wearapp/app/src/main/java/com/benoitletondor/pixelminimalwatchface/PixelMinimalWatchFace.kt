@@ -1,33 +1,29 @@
 package com.benoitletondor.pixelminimalwatchface
 
-import android.content.*
-import android.graphics.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.os.Bundle
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.text.format.DateUtils
-import android.text.format.DateUtils.FORMAT_SHOW_DATE
-import android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY
 import android.util.SparseArray
 import android.view.SurfaceHolder
 import android.view.WindowInsets
-import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
-import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
-import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
+import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
-import java.text.SimpleDateFormat
 import java.util.*
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     override fun onCreateEngine(): Engine {
-        val storage = Injection.Storage
+        val storage = Injection.storage()
         storage.init(this)
 
         return Engine(this, storage)
@@ -39,26 +35,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private lateinit var calendar: Calendar
         private var registeredTimeZoneReceiver = false
 
-        private var centerX = 0F
-        private var centerY = 0F
-        private var width = 0
-        private var height = 0
+        private val watchFaceDrawer = Injection.watchFaceDrawer()
 
-        @ColorInt private var backgroundColor: Int = 0
-        @ColorInt private var timeColor: Int = 0
-        @ColorInt private var timeColorDimmed: Int = 0
-        @ColorInt private var dateColor: Int = 0
-        @ColorInt private var dateColorDimmed: Int = 0
-        @ColorInt private var complicationTitleColor: Int = 0
-        private lateinit var timePaint: Paint
-        private lateinit var datePaint: Paint
-        private lateinit var wearOSLogoPaint: Paint
-        private lateinit var wearOSLogo: Bitmap
-        private lateinit var wearOSLogoAmbient: Bitmap
-        private lateinit var productSansRegularFont: Typeface
-        private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-        private lateinit var complicationsHighlightColors: ComplicationColors
+        private lateinit var complicationsColors: ComplicationColors
         private lateinit var activeComplicationDataSparseArray: SparseArray<ComplicationData>
         private lateinit var complicationDrawableSparseArray: SparseArray<ComplicationDrawable>
 
@@ -85,25 +64,12 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             calendar = Calendar.getInstance()
 
-            initializeConstants()
+            watchFaceDrawer.onCreate(service)
             initializeComplications()
-            initializeWatchFace()
-        }
-
-        private fun initializeConstants() {
-            backgroundColor = ContextCompat.getColor(service, R.color.face_background)
-            complicationTitleColor = ContextCompat.getColor(service, R.color.complication_title_color)
-            wearOSLogo = ContextCompat.getDrawable(service, R.drawable.ic_wear_os_logo)!!.toBitmap()
-            wearOSLogoAmbient = ContextCompat.getDrawable(service, R.drawable.ic_wear_os_logo_ambient)!!.toBitmap()
-            productSansRegularFont = ResourcesCompat.getFont(service, R.font.product_sans_regular)!!
-            timeColor = ContextCompat.getColor(service, R.color.face_time)
-            timeColorDimmed = ContextCompat.getColor(service, R.color.face_time_dimmed)
-            dateColor = ContextCompat.getColor(service, R.color.face_date)
-            dateColorDimmed = ContextCompat.getColor(service, R.color.face_date_dimmed)
         }
 
         private fun initializeComplications() {
-            complicationsHighlightColors = storage.getComplicationColors()
+            complicationsColors = storage.getComplicationColors()
             activeComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             val leftComplicationDrawable = ComplicationDrawable(service)
@@ -114,26 +80,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
 
-            setComplicationsActiveAndAmbientColors(complicationsHighlightColors)
+            setComplicationsActiveAndAmbientColors(complicationsColors)
             setActiveComplications(*COMPLICATION_IDS)
 
-            wearOSLogoPaint = Paint()
-        }
-
-        private fun initializeWatchFace() {
-            timePaint = Paint().apply {
-                typeface = productSansRegularFont
-            }
-
-            datePaint = Paint().apply {
-                typeface = productSansRegularFont
-            }
+            watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
+            watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
         }
 
         override fun onDestroy() {
-            wearOSLogo.recycle()
-            wearOSLogoAmbient.recycle()
-
             unregisterReceiver()
 
             super.onDestroy()
@@ -152,21 +106,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onApplyWindowInsets(insets: WindowInsets) {
             super.onApplyWindowInsets(insets)
 
-            timePaint.textSize = service.resources.getDimension(
-                if( insets.isRound ) {
-                    R.dimen.time_text_size_round
-                } else {
-                    R.dimen.time_text_size
-                }
-            )
-
-            datePaint.textSize = service.resources.getDimension(
-                if( insets.isRound ) {
-                    R.dimen.date_text_size_round
-                } else {
-                    R.dimen.date_text_size
-                }
-            )
+            watchFaceDrawer.onApplyWindowInsets(insets)
         }
 
         override fun onTimeTick() {
@@ -196,16 +136,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
             super.onSurfaceChanged(holder, format, width, height)
 
-            this.width = width
-            this.height = height
-
-            /*
-             * Find the coordinates of the center point on the screen, and ignore the window
-             * insets, so that, on round watches with a "chin", the watch face is centered on the
-             * entire screen, not just the usable portion.
-             */
-            centerX = width / 2f
-            centerY = height / 2f
+            watchFaceDrawer.onSurfaceChanged(width, height)
         }
 
         override fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData) {
@@ -241,82 +172,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             calendar.timeInMillis = System.currentTimeMillis()
 
-            drawBackground(canvas)
-            drawWatchFace(canvas)
-        }
-
-        private fun drawBackground(canvas: Canvas) {
-            canvas.drawColor(backgroundColor)
-        }
-
-        private fun drawWatchFace(canvas: Canvas) {
-            timePaint.apply {
-                isAntiAlias = !(ambient && lowBitAmbient)
-                style = if( ambient ) { Paint.Style.STROKE } else { Paint.Style.FILL }
-                color = if( ambient ) { timeColorDimmed } else { timeColor }
-            }
-
-            datePaint.apply {
-                isAntiAlias = !(ambient && lowBitAmbient)
-                color = if( ambient ) { dateColorDimmed } else { dateColor }
-            }
-
-            val timeText = timeFormatter.format(calendar.time)
-            val timeTextBounds = Rect().apply {
-                timePaint.getTextBounds(timeText, 0, timeText.length, this)
-            }
-            val timeYOffset = centerY + (timeTextBounds.height() / 2.0f ) - 5f
-            val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
-            canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
-
-            drawComplications(canvas, timeYOffset - timeTextBounds.height() - 10f)
-
-            val dateText = DateUtils.formatDateTime(service, calendar.timeInMillis, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY)
-            val dateTextBounds = Rect().apply {
-                datePaint.getTextBounds(dateText, 0, dateText.length, this)
-            }
-            val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 10f
-            val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
-            canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
-        }
-
-        private fun drawComplications(canvas: Canvas, bottomY: Float) {
-            val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
-            wearOSLogoPaint.isAntiAlias = !ambient
-
-            val sizeOfComplication = width / 5
-            val verticalOffset = bottomY.toInt() - sizeOfComplication
-
-            val leftBounds = Rect(
-                (centerX - (wearOsImage.width / 2) - 15f - sizeOfComplication).toInt(),
-                verticalOffset,
-                (centerX - (wearOsImage.width / 2)  - 15f).toInt(),
-                (verticalOffset + sizeOfComplication)
+            watchFaceDrawer.draw(
+                canvas,
+                calendar.time,
+                muteMode,
+                ambient,
+                lowBitAmbient,
+                burnInProtection
             )
-
-            if( !ambient ) {
-                val leftComplicationDrawable = complicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
-                leftComplicationDrawable.bounds = leftBounds
-
-                val rightBounds = Rect(
-                    (centerX + (wearOsImage.width / 2) + 15f).toInt(),
-                    verticalOffset,
-                    (centerX + (wearOsImage.width / 2)  + 15f + sizeOfComplication).toInt(),
-                    (verticalOffset + sizeOfComplication)
-                )
-
-                val rightComplicationDrawable = complicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
-                rightComplicationDrawable.bounds = rightBounds
-
-                COMPLICATION_IDS.forEach { complicationId ->
-                    val complicationDrawable = complicationDrawableSparseArray.get(complicationId)
-                    complicationDrawable.draw(canvas, calendar.timeInMillis)
-                }
-            }
-
-            val iconXOffset = centerX - (wearOsImage.width / 2.0f)
-            val iconYOffset = leftBounds.top + (leftBounds.height() / 2) - (wearOsImage.height / 2)
-            canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset.toFloat(), wearOSLogoPaint)
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
@@ -328,8 +191,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 /* Update time zone in case it changed while we weren't visible. */
                 calendar.timeZone = TimeZone.getDefault()
 
-                complicationsHighlightColors = storage.getComplicationColors()
-                setComplicationsActiveAndAmbientColors(complicationsHighlightColors)
+                complicationsColors = storage.getComplicationColors()
+                setComplicationsActiveAndAmbientColors(complicationsColors)
 
                 invalidate()
             } else {
@@ -355,32 +218,13 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
-            for (complicationId in COMPLICATION_IDS) {
-                val complicationDrawable = complicationDrawableSparseArray.get(complicationId)
-                val complicationData = activeComplicationDataSparseArray.get(complicationId)
-
-                val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
-                    complicationColors.leftColor
-                } else {
-                    complicationColors.rightColor
-                }
-
-                complicationDrawable.setTitleColorActive(complicationTitleColor)
-                complicationDrawable.setIconColorActive(primaryComplicationColor)
-                complicationDrawable.setTextTypefaceActive(productSansRegularFont)
-                complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
-                if( complicationData == null || complicationData.icon == null ) {
-                    complicationDrawable.setTextColorActive(primaryComplicationColor)
-                } else {
-                    complicationDrawable.setTextColorActive(complicationTitleColor)
-                }
-            }
+            watchFaceDrawer.setComplicationsColors(complicationColors, activeComplicationDataSparseArray)
         }
     }
 
     companion object {
-        private const val LEFT_COMPLICATION_ID = 100
-        private const val RIGHT_COMPLICATION_ID = 101
+        const val LEFT_COMPLICATION_ID = 100
+        const val RIGHT_COMPLICATION_ID = 101
 
         private val COMPLICATION_IDS = intArrayOf(
             LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID

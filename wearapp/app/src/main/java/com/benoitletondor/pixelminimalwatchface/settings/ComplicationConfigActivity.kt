@@ -17,7 +17,7 @@ class ComplicationConfigActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_complication_config)
 
-        adapter = ComplicationConfigRecyclerViewAdapter(this, Injection.Storage)
+        adapter = ComplicationConfigRecyclerViewAdapter(this, Injection.storage())
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true
         wearable_recycler_view.layoutManager = LinearLayoutManager(this)
