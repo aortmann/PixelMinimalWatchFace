@@ -186,7 +186,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                                                     bottomY: Float): ComplicationsDrawingCache {
         val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
 
-        val sizeOfComplication = screenWidth / 5
+        val sizeOfComplication = (screenWidth / 4.5).toInt()
         val verticalOffset = bottomY.toInt() - sizeOfComplication
 
         val leftBounds = Rect(
