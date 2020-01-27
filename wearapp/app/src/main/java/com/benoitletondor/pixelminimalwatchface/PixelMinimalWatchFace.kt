@@ -46,6 +46,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private var lowBitAmbient = false
         private var burnInProtection = false
 
+        private var lastVisibleTimestamp = 0L
+
         private val timeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 calendar.timeZone = TimeZone.getDefault()
@@ -149,7 +151,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
 
-            if( !ambient ) {
+            // Invalidate only if not in ambient mode && face is visible since more than 1s
+            if( !ambient &&  System.currentTimeMillis() - lastVisibleTimestamp >= 1000L ) {
                 invalidate()
             }
         }
@@ -195,6 +198,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 setComplicationsActiveAndAmbientColors(complicationsColors)
 
                 invalidate()
+
+                lastVisibleTimestamp = System.currentTimeMillis()
             } else {
                 unregisterReceiver()
             }
