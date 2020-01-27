@@ -80,7 +80,7 @@ class BillingImpl(context: Context,
     /**
      * Update the current IAP status if already checked
      */
-    override fun updateIAPStatusIfNeeded() {
+    override fun updatePremiumStatusIfNeeded() {
         Log.d("BillingImpl", "updateIAPStatusIfNeeded: $iabStatus")
 
         if ( iabStatus == PremiumCheckStatus.NOT_PREMIUM ) {

@@ -7,7 +7,7 @@ interface Billing {
     val userPremiumEventStream: LiveData<Boolean>
 
     fun isUserPremium(): Boolean
-    fun updateIAPStatusIfNeeded()
+    fun updatePremiumStatusIfNeeded()
     suspend fun launchPremiumPurchaseFlow(activity: Activity): PremiumPurchaseFlowResult
 }
 
