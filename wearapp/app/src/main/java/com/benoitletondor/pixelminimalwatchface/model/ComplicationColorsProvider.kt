@@ -2,7 +2,6 @@ package com.benoitletondor.pixelminimalwatchface.model
 
 import android.content.Context
 import android.graphics.Color
-import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import com.benoitletondor.pixelminimalwatchface.R
 

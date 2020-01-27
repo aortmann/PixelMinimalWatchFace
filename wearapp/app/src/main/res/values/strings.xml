@@ -6,14 +6,13 @@
     <string name="config_version">Version: %s</string>
     <string name="config_footer">Made by Benoit Letondor</string>
 
-    <string name="color_default">Wear OS</string>
+    <string name="color_default">Wear OS colors</string>
     <string name="color_yellow">Yellow</string>
     <string name="color_blue">Blue</string>
     <string name="color_light_blue">Light blue</string>
     <string name="color_grey">Grey</string>
     <string name="color_blue_grey">Blue grey</string>
     <string name="color_green">Green</string>
-    <string name="color_navy">Navy</string>
     <string name="color_red">Red</string>
     <string name="color_white">White</string>
     <string name="color_amber">Amber</string>
