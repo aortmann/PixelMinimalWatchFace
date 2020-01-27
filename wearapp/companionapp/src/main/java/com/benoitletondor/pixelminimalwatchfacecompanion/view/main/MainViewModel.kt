@@ -9,17 +9,16 @@ import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
                     private val sync: Sync) : ViewModel(), CoroutineScope by MainScope() {
-    val stateEventStream = MutableLiveData<State>()
+    val stateEventStream = MutableLiveData<State>(if( billing.isUserPremium() ) { State.Premium } else { State.Loading })
 
     private val userPremiumEventObserver: Observer<Boolean> = Observer { isUserPremium ->
-        if( (isUserPremium && stateEventStream.value ==  State.NotPremium) ||
+        if( (isUserPremium && stateEventStream.value == State.NotPremium) ||
             !isUserPremium && stateEventStream.value == State.Premium) {
             syncState(isUserPremium)
         }
     }
 
     init {
-        stateEventStream.value = if( billing.isUserPremium() ) { State.Premium } else { State.NotPremium }
         billing.userPremiumEventStream.observeForever(userPremiumEventObserver)
     }
 
@@ -51,6 +50,7 @@ class MainViewModel(private val billing: Billing,
     }
 
     sealed class State {
+        object Loading : State()
         object NotPremium : State()
         object Syncing : State()
         class ErrorSyncing(val isUserPremium: Boolean) : State()
