@@ -5,4 +5,5 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="@string/config_complications_color_label"
+    android:drawableStart="@drawable/ic_palette_white"
     style="@style/ButtonConfigurationStyle" />

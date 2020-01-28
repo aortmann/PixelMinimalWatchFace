@@ -7,11 +7,14 @@ private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 
 private const val DEFAULT_COMPLICATION_COLOR = -147282
 private const val KEY_COMPLICATION_COLORS = "complicationColors"
+private const val KEY_USER_PREMIUM = "user_premium"
 
 interface Storage {
     fun init(context: Context)
     fun getComplicationColors(): ComplicationColors
     fun setComplicationColors(complicationColors: ComplicationColors)
+    fun isUserPremium(): Boolean
+    fun setUserPremium(premium: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -48,5 +51,13 @@ class StorageImpl : Storage {
                 DEFAULT_COMPLICATION_COLOR
             } else { complicationColors.leftColor }
         ).apply()
+    }
+
+    override fun isUserPremium(): Boolean {
+        return sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+    }
+
+    override fun setUserPremium(premium: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_USER_PREMIUM, premium).apply()
     }
 }

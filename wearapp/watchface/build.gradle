@@ -12,6 +12,8 @@ android {
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
+
+        buildConfigField "String", "COMPANION_APP_PLAYSTORE_URL", '"https://play.google.com/store/apps/details?id=com.benoitletondor.pixelminimalwatchface"'
     }
     buildTypes {
         release {

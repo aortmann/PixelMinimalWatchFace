@@ -15,11 +15,12 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
+import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
 
 interface WatchFaceDrawer {
-    fun onCreate(context: Context)
+    fun onCreate(context: Context, storage: Storage)
 
     fun onApplyWindowInsets(insets: WindowInsets)
     fun onSurfaceChanged(width: Int, height: Int)
@@ -35,6 +36,7 @@ interface WatchFaceDrawer {
 }
 
 class WatchFaceDrawerImpl : WatchFaceDrawer {
+    private lateinit var storage: Storage
     private lateinit var context: Context
     private var drawingState: DrawingState = DrawingState.NoScreenData
     private val complicationsDrawable: MutableMap<Int, ComplicationDrawable> = ArrayMap()
@@ -53,8 +55,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var productSansRegularFont: Typeface
     private lateinit var timeFormatter: SimpleDateFormat
 
-    override fun onCreate(context: Context) {
+    override fun onCreate(context: Context, storage: Storage) {
         this.context = context
+        this.storage = storage
 
         wearOSLogoPaint = Paint()
         backgroundColor = ContextCompat.getColor(context, R.color.face_background)
@@ -146,7 +149,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val drawingState = drawingState
         if( drawingState is  DrawingState.Cache ){
-            drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection)
+            drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection, storage.isUserPremium())
         }
     }
 
@@ -218,20 +221,21 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                         muteMode: Boolean,
                                         ambient:Boolean,
                                         lowBitAmbient: Boolean,
-                                        burnInProtection: Boolean) {
+                                        burnInProtection: Boolean,
+                                        isUserPremium: Boolean) {
         val timeText = timeFormatter.format(currentTime)
         val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
         canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
 
-        complicationsDrawingCache.drawComplications(canvas, ambient, currentTime)
+        complicationsDrawingCache.drawComplications(canvas, ambient, currentTime, isUserPremium)
 
         val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
         val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
         canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
     }
 
-    private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date) {
-        if( !ambient ) {
+    private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
+        if( !ambient && isUserPremium ) {
             complicationsDrawable.values.forEach { complicationDrawable ->
                 complicationDrawable.draw(canvas, currentTime.time)
             }

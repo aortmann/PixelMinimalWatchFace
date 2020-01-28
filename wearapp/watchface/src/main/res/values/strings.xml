@@ -3,8 +3,15 @@
     <string name="complication_config">Configure widgets</string>
 
     <string name="config_complications_color_label">Widgets accent color</string>
+    <string name="config_premium_text">To setup widgets you have to become a premium user. Install the companion app on your phone to continue</string>
+    <string name="config_premium_button_cta">Open companion app on phone</string>
     <string name="config_version">Version: %s</string>
     <string name="config_footer">Made by Benoit Letondor</string>
+
+    <string name="open_phone_url_android_device">Continue on phone</string>
+    <string name="open_phone_url_ios_device">You need an Android phone to become a premium user.</string>
+    <string name="open_phone_url_android_not_reachable">An error occurred. Check connection and try again.</string>
+    <string name="open_phone_url_fail">Oops, an error occurred, try again later.</string>
 
     <string name="color_default">Wear OS colors</string>
     <string name="color_yellow">Yellow</string>

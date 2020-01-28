@@ -10,6 +10,6 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<Billing> { BillingImpl(get(), get()) }
-    single<Sync> { SyncImpl() }
+    single<Sync> { SyncImpl(get()) }
     single<Storage> { StorageImpl(get()) }
 }

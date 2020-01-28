@@ -13,6 +13,7 @@ import android.support.wearable.complications.ProviderInfoRetriever.OnProviderIn
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -31,10 +32,12 @@ private const val TYPE_HEADER = 0
 private const val TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG = 1
 private const val TYPE_COLOR_CONFIG = 2
 private const val TYPE_FOOTER = 3
+private const val TYPE_BECOME_PREMIUM = 4
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
-    private val storage: Storage
+    private val storage: Storage,
+    private val premiumClickListener: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -89,6 +92,14 @@ class ComplicationConfigRecyclerViewAdapter(
                     false
                 )
             )
+            TYPE_BECOME_PREMIUM -> return PremiumViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_premium,
+                    parent,
+                    false
+                ),
+                premiumClickListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -124,16 +135,29 @@ class ComplicationConfigRecyclerViewAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (position) {
-            0 -> TYPE_HEADER
-            1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
-            2 -> TYPE_COLOR_CONFIG
-            else -> TYPE_FOOTER
+        return if( storage.isUserPremium() ) {
+            when (position) {
+                0 -> TYPE_HEADER
+                1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
+                2 -> TYPE_COLOR_CONFIG
+                else -> TYPE_FOOTER
+            }
+        } else {
+            when (position) {
+                0 -> TYPE_HEADER
+                1 -> TYPE_BECOME_PREMIUM
+                else -> TYPE_FOOTER
+            }
         }
+
     }
 
     override fun getItemCount(): Int {
-        return 4
+        return if( storage.isUserPremium() ) {
+            4
+        } else {
+            3
+        }
     }
 
     /** Updates the selected complication id saved earlier with the new information.  */
@@ -279,5 +303,16 @@ class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
         versionTextView.text = versionTextView.context.getString(R.string.config_version, BuildConfig.VERSION_NAME)
+    }
+}
+
+class PremiumViewHolder(view: View,
+                        premiumClickListener: () -> Unit) : RecyclerView.ViewHolder(view) {
+    private val premiumButton: Button = view.findViewById(R.id.premium_button)
+
+    init {
+        premiumButton.setOnClickListener {
+            premiumClickListener()
+        }
     }
 }

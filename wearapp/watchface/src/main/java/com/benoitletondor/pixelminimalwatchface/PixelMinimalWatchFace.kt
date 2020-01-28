@@ -18,7 +18,10 @@ import android.view.WindowInsets
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
+import com.google.android.gms.wearable.*
 import java.util.*
+
+private const val DATA_KEY_PREMIUM = "premium"
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
@@ -31,7 +34,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     inner class Engine(private val service: WatchFaceService,
                        private val storage: Storage
-    ) : CanvasWatchFaceService.Engine() {
+    ) : CanvasWatchFaceService.Engine(), DataClient.OnDataChangedListener {
         private lateinit var calendar: Calendar
         private var registeredTimeZoneReceiver = false
 
@@ -66,8 +69,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             calendar = Calendar.getInstance()
 
-            watchFaceDrawer.onCreate(service)
+            watchFaceDrawer.onCreate(service, storage)
             initializeComplications()
+
+            Wearable.getDataClient(service).addListener(this)
         }
 
         private fun initializeComplications() {
@@ -91,6 +96,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         override fun onDestroy() {
             unregisterReceiver()
+            Wearable.getDataClient(service).removeListener(this)
 
             super.onDestroy()
         }
@@ -171,7 +177,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
         }
 
-
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             calendar.timeInMillis = System.currentTimeMillis()
 
@@ -224,6 +229,15 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
             watchFaceDrawer.setComplicationsColors(complicationColors, activeComplicationDataSparseArray)
+        }
+
+        override fun onDataChanged(dataEvents: DataEventBuffer) {
+            for (event in dataEvents) {
+                if (event.type == DataEvent.TYPE_CHANGED) {
+                    val isPremium = DataMapItem.fromDataItem(event.dataItem).dataMap.getBoolean(DATA_KEY_PREMIUM)
+                    storage.setUserPremium(isPremium)
+                }
+            }
         }
     }
 
