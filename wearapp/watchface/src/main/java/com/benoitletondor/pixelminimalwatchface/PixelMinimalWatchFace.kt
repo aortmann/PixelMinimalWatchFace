@@ -15,6 +15,7 @@ import android.support.wearable.watchface.WatchFaceStyle
 import android.util.SparseArray
 import android.view.SurfaceHolder
 import android.view.WindowInsets
+import android.widget.Toast
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
@@ -236,6 +237,12 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 if (event.type == DataEvent.TYPE_CHANGED) {
                     val isPremium = DataMapItem.fromDataItem(event.dataItem).dataMap.getBoolean(DATA_KEY_PREMIUM)
                     storage.setUserPremium(isPremium)
+
+                    if( isPremium ) {
+                        Toast.makeText(service, R.string.premium_confirmation, Toast.LENGTH_LONG).show()
+                    }
+
+                    invalidate()
                 }
             }
         }

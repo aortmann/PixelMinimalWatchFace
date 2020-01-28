@@ -8,6 +8,7 @@
     <string name="config_version">Version: %s</string>
     <string name="config_footer">Made by Benoit Letondor</string>
 
+    <string name="premium_confirmation">You\'re now premium. Configure widgets in watch face settings</string>
     <string name="open_phone_url_android_device">Continue on phone</string>
     <string name="open_phone_url_ios_device">You need an Android phone to become a premium user.</string>
     <string name="open_phone_url_android_not_reachable">An error occurred. Check connection and try again.</string>
