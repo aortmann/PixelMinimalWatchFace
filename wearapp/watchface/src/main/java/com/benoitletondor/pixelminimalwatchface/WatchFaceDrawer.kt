@@ -5,8 +5,7 @@ import android.graphics.*
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils
-import android.text.format.DateUtils.FORMAT_SHOW_DATE
-import android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY
+import android.text.format.DateUtils.*
 import android.util.ArrayMap
 import android.util.SparseArray
 import android.view.WindowInsets
@@ -71,6 +70,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
         timePaint = Paint().apply {
             typeface = productSansRegularFont
+            strokeWidth = 1.5f
         }
         datePaint = Paint().apply {
             typeface = productSansRegularFont
@@ -161,11 +161,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val complicationsDrawingCache = drawComplicationsAndBuildCache(canvas, ambient, currentTime, timeYOffset - timeTextBounds.height() - 10f)
 
-        val dateText = DateUtils.formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY)
+        val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
         val dateTextBounds = Rect().apply {
             datePaint.getTextBounds(dateText, 0, dateText.length, this)
         }
-        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 10f
+        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 20f
         val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
         canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
 
@@ -239,7 +239,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         complicationsDrawingCache.drawComplications(canvas, ambient, currentTime)
 
-        val dateText = DateUtils.formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY)
+        val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
         val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
         canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
     }

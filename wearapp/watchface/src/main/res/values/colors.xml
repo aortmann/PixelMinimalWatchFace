@@ -2,9 +2,9 @@
 <resources>
     <color name="face_background">#000</color>
     <color name="face_time">#FFF</color>
-    <color name="face_time_dimmed">#AAA</color>
+    <color name="face_time_dimmed">#BBB</color>
     <color name="face_date">#FFF</color>
-    <color name="face_date_dimmed">#777</color>
+    <color name="face_date_dimmed">#BBB</color>
     <color name="config_footer_color">#CCC</color>
 
     <color name="complication_default_left_color">#5484f8</color>
