@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.*
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
-import android.text.format.DateUtils
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
 import android.util.SparseArray
@@ -139,37 +138,34 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         setPaintVariables(muteMode, ambient, lowBitAmbient, burnInProtection)
         drawBackground(canvas)
-        when( val drawingState = drawingState ) {
-            is DrawingState.NoCache -> drawingState.drawWithoutCache(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection)
-            is DrawingState.Cache -> drawingState.drawWithCache(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection)
+
+        val currentDrawingState = drawingState
+        if( currentDrawingState is DrawingState.NoCache ) {
+            drawingState = currentDrawingState.buildCache()
+        }
+
+        val drawingState = drawingState
+        if( drawingState is  DrawingState.Cache ){
+            drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection)
         }
     }
 
-    private fun DrawingState.NoCache.drawWithoutCache(canvas: Canvas,
-                                                      currentTime: Date,
-                                                      muteMode: Boolean,
-                                                      ambient:Boolean,
-                                                      lowBitAmbient: Boolean,
-                                                      burnInProtection: Boolean) {
-        val timeText = timeFormatter.format(currentTime)
+    private fun DrawingState.NoCache.buildCache(): DrawingState.Cache {
+        val timeText = "22:13"
         val timeTextBounds = Rect().apply {
             timePaint.getTextBounds(timeText, 0, timeText.length, this)
         }
         val timeYOffset = centerY + (timeTextBounds.height() / 2.0f ) - 5f
-        val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
-        canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
 
-        val complicationsDrawingCache = drawComplicationsAndBuildCache(canvas, ambient, currentTime, timeYOffset - timeTextBounds.height() - 10f)
+        val complicationsDrawingCache = buildComplicationDrawingCache(timeYOffset - timeTextBounds.height() - 10f)
 
-        val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
+        val dateText = "May, 15"
         val dateTextBounds = Rect().apply {
             datePaint.getTextBounds(dateText, 0, dateText.length, this)
         }
         val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 20f
-        val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
-        canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
 
-        drawingState = DrawingState.Cache(
+        return DrawingState.Cache(
             screenWidth,
             screenHeight,
             centerX,
@@ -180,11 +176,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
     }
 
-    private fun DrawingState.NoCache.drawComplicationsAndBuildCache(canvas: Canvas,
-                                                                    ambient: Boolean,
-                                                                    currentTime: Date,
-                                                                    bottomY: Float): ComplicationsDrawingCache {
-        val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
+    private fun DrawingState.NoCache.buildComplicationDrawingCache(bottomY: Float): ComplicationsDrawingCache {
+        val wearOsImage = wearOSLogo
 
         val sizeOfComplication = (screenWidth / 4.5).toInt()
         val verticalOffset = bottomY.toInt() - sizeOfComplication
@@ -198,9 +191,6 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         complicationsDrawable[LEFT_COMPLICATION_ID]?.let { leftComplicationDrawable ->
             leftComplicationDrawable.bounds = leftBounds
-            if( !ambient ) {
-                leftComplicationDrawable.draw(canvas, currentTime.time)
-            }
         }
 
         val rightBounds = Rect(
@@ -212,14 +202,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         complicationsDrawable[RIGHT_COMPLICATION_ID]?.let { rightComplicationDrawable ->
             rightComplicationDrawable.bounds = rightBounds
-            if( !ambient ) {
-                rightComplicationDrawable.draw(canvas, currentTime.time)
-            }
         }
 
         val iconXOffset = centerX - (wearOsImage.width / 2.0f)
         val iconYOffset = leftBounds.top + (leftBounds.height() / 2) - (wearOsImage.height / 2)
-        canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset.toFloat(), wearOSLogoPaint)
 
         return ComplicationsDrawingCache(
             iconXOffset,
@@ -227,12 +213,12 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
     }
 
-    private fun DrawingState.Cache.drawWithCache(canvas: Canvas,
-                                                 currentTime: Date,
-                                                 muteMode: Boolean,
-                                                 ambient:Boolean,
-                                                 lowBitAmbient: Boolean,
-                                                 burnInProtection: Boolean) {
+    private fun DrawingState.Cache.draw(canvas: Canvas,
+                                        currentTime: Date,
+                                        muteMode: Boolean,
+                                        ambient:Boolean,
+                                        lowBitAmbient: Boolean,
+                                        burnInProtection: Boolean) {
         val timeText = timeFormatter.format(currentTime)
         val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
         canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
