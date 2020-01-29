@@ -5,11 +5,11 @@ import android.content.res.Configuration
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
+import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import org.koin.android.viewmodel.ext.android.viewModel
 import kotlinx.android.synthetic.main.activity_main.*
@@ -93,43 +93,74 @@ class MainActivity : AppCompatActivity() {
         }
 
         main_activity_not_premium_view_promocode_button.setOnClickListener {
-            val dialogView = layoutInflater.inflate(R.layout.dialog_redeem_voucher, null)
-            val voucherEditText: EditText = dialogView.findViewById(R.id.voucher)
+            showRedeemVoucherUI()
+        }
+    }
 
-            val builder = AlertDialog.Builder(this)
-                .setTitle(R.string.voucher_redeem_dialog_title)
-                .setMessage(R.string.voucher_redeem_dialog_message)
-                .setView(dialogView)
-                .setPositiveButton(R.string.voucher_redeem_dialog_cta) { dialog, _ ->
-                    dialog.dismiss()
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
 
-                    val voucher = voucherEditText.text.toString()
-                    if (voucher.trim { it <= ' ' }.isEmpty()) {
-                        AlertDialog.Builder(this)
-                            .setTitle(R.string.voucher_redeem_error_dialog_title)
-                            .setMessage(R.string.voucher_redeem_error_code_invalid_dialog_message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                    }
+        menu.findItem(R.id.copyright_button).title = getString(R.string.copyright, BuildConfig.VERSION_NAME)
 
-                    if ( !launchRedeemPromocodeFlow(voucher) ) {
-                        AlertDialog.Builder(this)
-                            .setTitle(R.string.iab_purchase_error_title)
-                            .setMessage(R.string.iab_purchase_error_message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                    }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if( item.itemId == R.id.send_feedback_button ) {
+            val sendIntent = Intent()
+            sendIntent.action = Intent.ACTION_SENDTO
+            sendIntent.data = Uri.parse("mailto:") // only email apps should handle this
+            sendIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf(resources.getString(R.string.feedback_email)))
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.feedback_send_subject))
+
+            if ( sendIntent.resolveActivity(packageManager) != null) {
+                startActivity(sendIntent)
+            }
+
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun showRedeemVoucherUI() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_redeem_voucher, null)
+        val voucherEditText: EditText = dialogView.findViewById(R.id.voucher)
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(R.string.voucher_redeem_dialog_title)
+            .setMessage(R.string.voucher_redeem_dialog_message)
+            .setView(dialogView)
+            .setPositiveButton(R.string.voucher_redeem_dialog_cta) { dialog, _ ->
+                dialog.dismiss()
+
+                val voucher = voucherEditText.text.toString()
+                if (voucher.trim { it <= ' ' }.isEmpty()) {
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.voucher_redeem_error_dialog_title)
+                        .setMessage(R.string.voucher_redeem_error_code_invalid_dialog_message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
 
-            val dialog = builder.show()
-
-            // Directly show keyboard when the dialog pops
-            voucherEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                // Check if the device doesn't have a physical keyboard
-                if (hasFocus && resources.configuration.keyboard == Configuration.KEYBOARD_NOKEYS) {
-                    dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                if ( !launchRedeemPromocodeFlow(voucher) ) {
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.iab_purchase_error_title)
+                        .setMessage(R.string.iab_purchase_error_message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
                 }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+
+        val dialog = builder.show()
+
+        // Directly show keyboard when the dialog pops
+        voucherEditText.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            // Check if the device doesn't have a physical keyboard
+            if (hasFocus && resources.configuration.keyboard == Configuration.KEYBOARD_NOKEYS) {
+                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
             }
         }
     }

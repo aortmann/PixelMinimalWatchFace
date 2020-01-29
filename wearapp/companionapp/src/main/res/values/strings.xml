@@ -22,4 +22,8 @@
     <string name="voucher_redeem_error_code_invalid_dialog_message">Your promo code is invalid.</string>
     <string name="iab_purchase_error_title">Oops</string>
     <string name="iab_purchase_error_message">An error occurred, check your connection and try again later.</string>
+    <string name="send_feedback_cta">Send feedback or report bug</string>
+    <string name="copyright">Version %s. Made by Benoit Letondor</string>
+    <string name="feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
+    <string name="feedback_send_subject" translatable="false">Pixel minimal watch face - Feedback</string>
 </resources>
