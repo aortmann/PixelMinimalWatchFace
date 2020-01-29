@@ -103,8 +103,8 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton(R.string.voucher_redeem_dialog_cta) { dialog, _ ->
                     dialog.dismiss()
 
-                    val promocode = voucherEditText.text.toString()
-                    if (promocode.trim { it <= ' ' }.isEmpty()) {
+                    val voucher = voucherEditText.text.toString()
+                    if (voucher.trim { it <= ' ' }.isEmpty()) {
                         AlertDialog.Builder(this)
                             .setTitle(R.string.voucher_redeem_error_dialog_title)
                             .setMessage(R.string.voucher_redeem_error_code_invalid_dialog_message)
@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                             .show()
                     }
 
-                    if ( !launchRedeemPromocodeFlow(promocode) ) {
+                    if ( !launchRedeemPromocodeFlow(voucher) ) {
                         AlertDialog.Builder(this)
                             .setTitle(R.string.iab_purchase_error_title)
                             .setMessage(R.string.iab_purchase_error_message)
