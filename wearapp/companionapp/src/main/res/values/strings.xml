@@ -1,3 +1,25 @@
 <resources>
-    <string name="app_name">Pixel Minimal Watch Face companion app</string>
+    <string name="app_name">Pixel Minimal Watch Face</string>
+
+    <string name="loading_premium_status">Loading…</string>
+    <string name="premium_status">You\'re now premium. You can setup your watch face widgets on your watch!\n\nThank you for your support :)</string>
+    <string name="premium_sync_cta">Sync premium status with Watch</string>
+    <string name="premium_error">Oops, an error occurred while querying Google Play Store for you account status.\n\nPlease try again later\n(%s)</string>
+    <string name="error_retry_cta">Retry</string>
+    <string name="syncing_premium_status">Syncing with watch…</string>
+    <string name="not_premium_status">To enable widgets on your watch face, please consider becoming a premium user.\n(1 time payment, no hidden fees).</string>
+    <string name="not_premium_status_2">I\'m developing this app on my free time and I hope you\'ll like it as much as I do :)</string>
+    <string name="premium_cta">Become premium</string>
+    <string name="promocode_cta">Redeem code</string>
+    <string name="error_syncing_title">Error syncing with watch</string>
+    <string name="error_syncing_message">An error occurred while syncing with your watch. Please check connection and try again.\n(%s)</string>
+    <string name="error_paying_title">An error occurred</string>
+    <string name="error_paying_message">An error occurred while processing your payment. Please check your connection and try again.\n(%s)</string>
+    <string name="voucher_redeem_dialog_title">Promo code</string>
+    <string name="voucher_redeem_dialog_message">Enter your promo code</string>
+    <string name="voucher_redeem_dialog_cta">Redeem</string>
+    <string name="voucher_redeem_error_dialog_title">Oops</string>
+    <string name="voucher_redeem_error_code_invalid_dialog_message">Your promo code is invalid.</string>
+    <string name="iab_purchase_error_title">Oops</string>
+    <string name="iab_purchase_error_message">An error occurred, check your connection and try again later.</string>
 </resources>

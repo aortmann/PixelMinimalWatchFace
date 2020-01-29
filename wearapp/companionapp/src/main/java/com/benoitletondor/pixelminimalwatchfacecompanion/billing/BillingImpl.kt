@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.android.billingclient.api.*
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
+import java.io.IOException
 import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
@@ -29,14 +30,14 @@ class BillingImpl(context: Context,
     /**
      * iab check status
      */
-    private var iabStatus: PremiumCheckStatus = PremiumCheckStatus.INITIALIZING
+    private var iabStatus: PremiumCheckStatus = PremiumCheckStatus.Initializing
 
     private var premiumFlowContinuation: Continuation<PremiumPurchaseFlowResult>? = null
 
-    override val userPremiumEventStream: LiveData<Boolean>
+    override val userPremiumEventStream: LiveData<PremiumCheckStatus>
         get() = userPremiumEventSteamInternal
 
-    private val userPremiumEventSteamInternal = MutableLiveData<Boolean>()
+    private val userPremiumEventSteamInternal = MutableLiveData<PremiumCheckStatus>()
 
     init {
         startBillingClient()
@@ -44,12 +45,12 @@ class BillingImpl(context: Context,
 
     private fun startBillingClient() {
         try {
-            setIabStatusAndNotify(PremiumCheckStatus.INITIALIZING)
+            setIabStatusAndNotify(PremiumCheckStatus.Initializing)
 
             billingClient.startConnection(this)
         } catch (e: Exception) {
             Log.e("BillingImpl", "Error while checking iab status", e)
-            setIabStatusAndNotify(PremiumCheckStatus.ERROR)
+            setIabStatusAndNotify(PremiumCheckStatus.Error(e))
         }
     }
 
@@ -61,10 +62,11 @@ class BillingImpl(context: Context,
     private fun setIabStatusAndNotify(status: PremiumCheckStatus) {
         iabStatus = status
 
-        if (status == PremiumCheckStatus.PREMIUM || status == PremiumCheckStatus.NOT_PREMIUM) {
-            storage.setUserPremium(iabStatus == PremiumCheckStatus.PREMIUM)
-            userPremiumEventSteamInternal.postValue(iabStatus == PremiumCheckStatus.PREMIUM)
+        if (status == PremiumCheckStatus.Premium || status == PremiumCheckStatus.NotPremium) {
+            storage.setUserPremium(iabStatus == PremiumCheckStatus.Premium)
         }
+
+        userPremiumEventSteamInternal.postValue(status)
     }
 
     /**
@@ -74,7 +76,7 @@ class BillingImpl(context: Context,
      */
     override fun isUserPremium(): Boolean
     {
-        return storage.isUserPremium() || iabStatus == PremiumCheckStatus.PREMIUM
+        return storage.isUserPremium() || iabStatus == PremiumCheckStatus.Premium
     }
 
     /**
@@ -83,10 +85,10 @@ class BillingImpl(context: Context,
     override fun updatePremiumStatusIfNeeded() {
         Log.d("BillingImpl", "updateIAPStatusIfNeeded: $iabStatus")
 
-        if ( iabStatus == PremiumCheckStatus.NOT_PREMIUM ) {
-            setIabStatusAndNotify(PremiumCheckStatus.CHECKING)
+        if ( iabStatus == PremiumCheckStatus.NotPremium ) {
+            setIabStatusAndNotify(PremiumCheckStatus.Checking)
             billingClient.queryPurchaseHistoryAsync(BillingClient.SkuType.INAPP, this)
-        } else if ( iabStatus == PremiumCheckStatus.ERROR ) {
+        } else if ( iabStatus is PremiumCheckStatus.Error) {
             startBillingClient()
         }
     }
@@ -97,10 +99,10 @@ class BillingImpl(context: Context,
      * @param activity activity that started this purchase
      */
     override suspend fun launchPremiumPurchaseFlow(activity: Activity): PremiumPurchaseFlowResult {
-        if ( iabStatus != PremiumCheckStatus.NOT_PREMIUM ) {
+        if ( iabStatus != PremiumCheckStatus.NotPremium ) {
             return when (iabStatus) {
-                PremiumCheckStatus.ERROR -> PremiumPurchaseFlowResult.Error("Unable to connect to your Google account. Please restart the app and try again")
-                PremiumCheckStatus.PREMIUM -> PremiumPurchaseFlowResult.Error("You already bought Premium with that Google account. Restart the app if you don't have access to premium features.")
+                is PremiumCheckStatus.Error -> PremiumPurchaseFlowResult.Error("Unable to connect to your Google account. Please restart the app and try again")
+                PremiumCheckStatus.Premium -> PremiumPurchaseFlowResult.Error("You already bought Premium with that Google account. Restart the app if you don't have access to premium features.")
                 else -> PremiumPurchaseFlowResult.Error("Runtime error: $iabStatus")
             }
         }
@@ -117,7 +119,7 @@ class BillingImpl(context: Context,
 
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             if (billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
-                setIabStatusAndNotify(PremiumCheckStatus.PREMIUM)
+                setIabStatusAndNotify(PremiumCheckStatus.Premium)
                 return PremiumPurchaseFlowResult.Success
             }
 
@@ -151,12 +153,12 @@ class BillingImpl(context: Context,
 
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             // Oh noes, there was a problem.
-            setIabStatusAndNotify(PremiumCheckStatus.ERROR)
+            setIabStatusAndNotify(PremiumCheckStatus.Error(Exception("Error while setting-up iab: " + billingResult.responseCode)))
             Log.e("BillingImpl","Error while setting-up iab: " + billingResult.responseCode)
             return
         }
 
-        setIabStatusAndNotify(PremiumCheckStatus.CHECKING)
+        setIabStatusAndNotify(PremiumCheckStatus.Checking)
 
         billingClient.queryPurchaseHistoryAsync(BillingClient.SkuType.INAPP, this)
     }
@@ -165,7 +167,7 @@ class BillingImpl(context: Context,
         Log.d("BillingImpl", "onBillingServiceDisconnected")
 
         premiumFlowContinuation?.resumeWith(Result.success(PremiumPurchaseFlowResult.Error("Lost connection with Google Play")))
-        setIabStatusAndNotify(PremiumCheckStatus.ERROR)
+        setIabStatusAndNotify(PremiumCheckStatus.Error(IOException("Lost connection with Google Play")))
     }
 
     override fun onPurchaseHistoryResponse(billingResult: BillingResult, purchaseHistoryRecordList: List<PurchaseHistoryRecord>?) {
@@ -174,7 +176,7 @@ class BillingImpl(context: Context,
         // Is it a failure?
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             Log.e("BillingImpl", "Error while querying iab inventory: " + billingResult.responseCode)
-            setIabStatusAndNotify(PremiumCheckStatus.ERROR)
+            setIabStatusAndNotify(PremiumCheckStatus.Error(Exception("Error while querying iab inventory: " + billingResult.responseCode)))
             return
         }
 
@@ -189,7 +191,7 @@ class BillingImpl(context: Context,
 
         Log.d("BillingImpl", "iab query inventory was successful: $premium")
 
-        setIabStatusAndNotify(if (premium) PremiumCheckStatus.PREMIUM else PremiumCheckStatus.NOT_PREMIUM)
+        setIabStatusAndNotify(if (premium) PremiumCheckStatus.Premium else PremiumCheckStatus.NotPremium)
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
@@ -200,7 +202,7 @@ class BillingImpl(context: Context,
             when {
                 billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED -> premiumFlowContinuation?.resumeWith(Result.success(PremiumPurchaseFlowResult.Cancelled))
                 billingResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                    setIabStatusAndNotify(PremiumCheckStatus.PREMIUM)
+                    setIabStatusAndNotify(PremiumCheckStatus.Premium)
                     premiumFlowContinuation?.resumeWith(Result.success(PremiumPurchaseFlowResult.Success))
                     return
                 }
@@ -240,20 +242,8 @@ class BillingImpl(context: Context,
             return
         }
 
-        setIabStatusAndNotify(PremiumCheckStatus.PREMIUM)
+        setIabStatusAndNotify(PremiumCheckStatus.Premium)
         premiumFlowContinuation?.resumeWith(Result.success(PremiumPurchaseFlowResult.Success))
         premiumFlowContinuation = null
     }
-}
-
-private enum class PremiumCheckStatus {
-    INITIALIZING,
-
-    CHECKING,
-
-    ERROR,
-
-    NOT_PREMIUM,
-
-    PREMIUM
 }

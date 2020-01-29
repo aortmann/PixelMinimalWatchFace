@@ -1,20 +1,30 @@
 package com.benoitletondor.pixelminimalwatchfacecompanion.view.main
 
+import android.app.Activity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import com.benoitletondor.pixelminimalwatchfacecompanion.SingleLiveEvent
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
+import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumCheckStatus
+import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumPurchaseFlowResult
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
                     private val sync: Sync) : ViewModel(), CoroutineScope by MainScope() {
+    val errorSyncingEvent = SingleLiveEvent<Throwable>()
+    val errorPayingEvent = SingleLiveEvent<Throwable>()
     val stateEventStream = MutableLiveData<State>(if( billing.isUserPremium() ) { State.Premium } else { State.Loading })
 
-    private val userPremiumEventObserver: Observer<Boolean> = Observer { isUserPremium ->
-        if( (isUserPremium && stateEventStream.value == State.NotPremium) ||
-            !isUserPremium && stateEventStream.value == State.Premium) {
-            syncState(isUserPremium)
+    private val userPremiumEventObserver: Observer<PremiumCheckStatus> = Observer { premiumCheckStatus ->
+        if( (premiumCheckStatus == PremiumCheckStatus.Premium && stateEventStream.value == State.NotPremium) ||
+            (premiumCheckStatus == PremiumCheckStatus.NotPremium && stateEventStream.value == State.Premium) ) {
+            syncState(premiumCheckStatus == PremiumCheckStatus.Premium)
+        }
+
+        if( premiumCheckStatus is PremiumCheckStatus.Error && stateEventStream.value != State.Premium ) {
+            stateEventStream.value = State.Error(premiumCheckStatus.error)
         }
     }
 
@@ -33,7 +43,7 @@ class MainViewModel(private val billing: Billing,
 
                 stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
             } catch (t: Throwable) {
-                stateEventStream.value = State.ErrorSyncing(userPremium)
+                errorSyncingEvent.value = t
             }
         }
     }
@@ -49,11 +59,36 @@ class MainViewModel(private val billing: Billing,
         syncState(billing.isUserPremium())
     }
 
+    fun retryPremiumStatusCheck() {
+        billing.updatePremiumStatusIfNeeded()
+    }
+
+    fun launchPremiumBuyFlow(host: Activity) {
+        launch {
+            try {
+                stateEventStream.value = State.Loading
+
+                val result = withContext(Dispatchers.IO) {
+                    billing.launchPremiumPurchaseFlow(host)
+                }
+
+                // Success result will be handled automatically as notification to userPremiumEventObserver
+
+                if( result is PremiumPurchaseFlowResult.Error ){
+                    errorPayingEvent.value = Exception(result.reason)
+                    stateEventStream.value = State.NotPremium
+                }
+            } catch (t: Throwable) {
+                errorPayingEvent.value = t
+            }
+        }
+    }
+
     sealed class State {
         object Loading : State()
         object NotPremium : State()
         object Syncing : State()
-        class ErrorSyncing(val isUserPremium: Boolean) : State()
         object Premium : State()
+        class Error(val error: Throwable) : State()
     }
 }
