@@ -6,7 +6,6 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
-import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
@@ -25,7 +24,11 @@ interface WatchFaceDrawer {
     fun onApplyWindowInsets(insets: WindowInsets)
     fun onSurfaceChanged(width: Int, height: Int)
     fun setComplicationDrawable(complicationId: Int, complicationDrawable: ComplicationDrawable)
-    fun setComplicationsColors(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>)
+    fun setComplicationsColors(complicationColors: ComplicationColors)
+    fun updateComplicationColors(complicationId: Int,
+                                 complicationDrawable: ComplicationDrawable,
+                                 data: ComplicationData?,
+                                 complicationColors: ComplicationColors)
 
     fun draw(canvas: Canvas,
              currentTime: Date,
@@ -110,10 +113,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         complicationsDrawable[complicationId] = complicationDrawable
     }
 
-    override fun setComplicationsColors(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>) {
+    override fun setComplicationsColors(complicationColors: ComplicationColors) {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
-            val complicationData = complicationsData.get(complicationId)
-
             val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
                 complicationColors.leftColor
             } else {
@@ -124,11 +125,23 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             complicationDrawable.setIconColorActive(primaryComplicationColor)
             complicationDrawable.setTextTypefaceActive(productSansRegularFont)
             complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
-            if( complicationData == null || complicationData.icon == null ) {
-                complicationDrawable.setTextColorActive(primaryComplicationColor)
-            } else {
-                complicationDrawable.setTextColorActive(complicationTitleColor)
-            }
+        }
+    }
+
+    override fun updateComplicationColors(complicationId: Int,
+                                          complicationDrawable: ComplicationDrawable,
+                                          data: ComplicationData?,
+                                          complicationColors: ComplicationColors) {
+        val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
+            complicationColors.leftColor
+        } else {
+            complicationColors.rightColor
+        }
+
+        if( data != null && data.icon != null ) {
+            complicationDrawable.setTextColorActive(complicationTitleColor)
+        } else {
+            complicationDrawable.setTextColorActive(primaryComplicationColor)
         }
     }
 

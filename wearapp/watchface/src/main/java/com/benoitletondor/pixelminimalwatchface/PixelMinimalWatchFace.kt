@@ -172,6 +172,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
 
+            watchFaceDrawer.updateComplicationColors(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
+
             if( !ambient ) {
                 invalidate()
             }
@@ -240,7 +242,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
-            watchFaceDrawer.setComplicationsColors(complicationColors, activeComplicationDataSparseArray)
+            watchFaceDrawer.setComplicationsColors(complicationColors)
         }
 
         override fun onDataChanged(dataEvents: DataEventBuffer) {
