@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
@@ -35,7 +36,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     inner class Engine(private val service: WatchFaceService,
                        private val storage: Storage
-    ) : CanvasWatchFaceService.Engine(), DataClient.OnDataChangedListener {
+    ) : CanvasWatchFaceService.Engine(), DataClient.OnDataChangedListener, Drawable.Callback {
         private lateinit var calendar: Calendar
         private var registeredTimeZoneReceiver = false
 
@@ -85,6 +86,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+
+            leftComplicationDrawable.callback = this
+            rightComplicationDrawable.callback = this
 
             setComplicationsActiveAndAmbientColors(complicationsColors)
             setActiveComplications(*COMPLICATION_IDS)
@@ -252,6 +256,18 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                     invalidate()
                 }
             }
+        }
+
+        override fun unscheduleDrawable(p0: Drawable, p1: Runnable) {
+            // No-op
+        }
+
+        override fun invalidateDrawable(p0: Drawable) {
+            invalidate()
+        }
+
+        override fun scheduleDrawable(p0: Drawable, p1: Runnable, p2: Long) {
+            // No-op
         }
     }
 
