@@ -7,7 +7,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
@@ -59,10 +62,25 @@ class MainActivity : AppCompatActivity() {
                     main_activity_premium_view.visibility = View.GONE
                     main_activity_syncing_view.visibility = View.GONE
                     main_activity_error_view.visibility = View.VISIBLE
-                    main_activity_error_view_text.text = getString(R.string.premium_error, state.error.message)
+                    main_activity_error_view_text_2.text = getString(R.string.premium_error, state.error.message)
                 }
             }
         })
+
+        main_activity_not_premium_view_not_premium_view_pager.adapter = object : FragmentPagerAdapter(supportFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+
+            override fun getItem(position: Int): Fragment = Fragment(when(position) {
+                0 -> R.layout.fragment_premium_1
+                1 -> R.layout.fragment_premium_2
+                2 -> R.layout.fragment_premium_3
+                else -> throw IllegalStateException("invalid position: $position")
+            })
+
+            override fun getCount(): Int = 3
+
+        }
+
+        main_activity_not_premium_view_not_premium_view_pager_indicator.setViewPager(main_activity_not_premium_view_not_premium_view_pager)
 
         viewModel.errorSyncingEvent.observe(this, Observer { syncingError ->
             AlertDialog.Builder(this)
@@ -78,6 +96,10 @@ class MainActivity : AppCompatActivity() {
                 .setMessage(getString(R.string.error_syncing_message, paymentError.message))
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
+        })
+
+        viewModel.syncSucceedEvent.observe(this, Observer {
+            Toast.makeText(this, R.string.sync_succeed_message, Toast.LENGTH_LONG).show()
         })
 
         main_activity_error_view_retry_button.setOnClickListener {
@@ -142,9 +164,11 @@ class MainActivity : AppCompatActivity() {
                         .setMessage(R.string.voucher_redeem_error_code_invalid_dialog_message)
                         .setPositiveButton(android.R.string.ok, null)
                         .show()
+
+                    return@setPositiveButton
                 }
 
-                if ( !launchRedeemPromocodeFlow(voucher) ) {
+                if ( !launchRedeemVoucherFlow(voucher) ) {
                     AlertDialog.Builder(this)
                         .setTitle(R.string.iab_purchase_error_title)
                         .setMessage(R.string.iab_purchase_error_message)
@@ -165,9 +189,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun launchRedeemPromocodeFlow(promocode: String): Boolean {
+    private fun launchRedeemVoucherFlow(voucher: String): Boolean {
         return try {
-            val url = "https://play.google.com/redeem?code=" + URLEncoder.encode(promocode, "UTF-8")
+            val url = "https://play.google.com/redeem?code=" + URLEncoder.encode(voucher, "UTF-8")
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             true
         } catch (e: Exception) {

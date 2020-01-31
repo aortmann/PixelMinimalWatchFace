@@ -15,6 +15,7 @@ class MainViewModel(private val billing: Billing,
                     private val sync: Sync) : ViewModel(), CoroutineScope by MainScope() {
     val errorSyncingEvent = SingleLiveEvent<Throwable>()
     val errorPayingEvent = SingleLiveEvent<Throwable>()
+    val syncSucceedEvent = SingleLiveEvent<Unit>()
     val stateEventStream = MutableLiveData<State>(if( billing.isUserPremium() ) { State.Premium } else { State.Loading })
 
     private val userPremiumEventObserver: Observer<PremiumCheckStatus> = Observer { premiumCheckStatus ->
@@ -41,6 +42,7 @@ class MainViewModel(private val billing: Billing,
                     sync.sendPremiumStatus(userPremium)
                 }
 
+                syncSucceedEvent.value = Unit
                 stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
             } catch (t: Throwable) {
                 errorSyncingEvent.value = t

@@ -2,13 +2,15 @@
     <string name="app_name">Pixel Minimal Watch Face</string>
 
     <string name="loading_premium_status">Loading…</string>
-    <string name="premium_status">You\'re now premium. You can setup your watch face widgets on your watch!\n\nThank you for your support :)</string>
+    <string name="premium_status">You\'re premium!</string>
+    <string name="premium_status_2">You can setup your watch face widgets on your watch!\n\nThank you so much for your support :)</string>
     <string name="premium_sync_cta">Sync premium status with Watch</string>
-    <string name="premium_error">Oops, an error occurred while querying Google Play Store for you account status.\n\nPlease try again later\n(%s)</string>
+    <string name="premium_error_title">Oops</string>
+    <string name="premium_error">Unable to reach PlayStore to verify your premium status.\n\nPlease check your connection and try again.\n(%s)</string>
     <string name="error_retry_cta">Retry</string>
     <string name="syncing_premium_status">Syncing with watch…</string>
-    <string name="not_premium_status">To enable widgets on your watch face, please consider becoming a premium user.\n(1 time payment, no hidden fees).</string>
-    <string name="not_premium_status_2">I\'m developing this app on my free time and I hope you\'ll like it as much as I do :)</string>
+    <string name="not_premium_status">To enable widgets on your watch face, please consider becoming a premium user.</string>
+    <string name="not_premium_status_2">(1 time payment, no hidden fees)</string>
     <string name="premium_cta">Become premium</string>
     <string name="promocode_cta">Redeem code</string>
     <string name="error_syncing_title">Error syncing with watch</string>
@@ -26,4 +28,8 @@
     <string name="copyright">Version %s. Made by Benoit Letondor</string>
     <string name="feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
     <string name="feedback_send_subject" translatable="false">Pixel minimal watch face - Feedback</string>
+    <string name="premium_1_title">2 configurable widgets, beautifully integrated</string>
+    <string name="premium_2_title">Configure widgets as you want</string>
+    <string name="premium_3_title">Choose widgets accent color</string>
+    <string name="sync_succeed_message">Sync done! Check your watch.</string>
 </resources>
