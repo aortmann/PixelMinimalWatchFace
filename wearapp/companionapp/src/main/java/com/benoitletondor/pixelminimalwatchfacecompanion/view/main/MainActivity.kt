@@ -92,8 +92,8 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.errorPayingEvent.observe(this, Observer { paymentError ->
             AlertDialog.Builder(this)
-                .setTitle(R.string.error_syncing_title)
-                .setMessage(getString(R.string.error_syncing_message, paymentError.message))
+                .setTitle(R.string.error_paying_title)
+                .setMessage(getString(R.string.error_paying_message, paymentError.message))
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
         })

@@ -20,7 +20,8 @@ class MainViewModel(private val billing: Billing,
 
     private val userPremiumEventObserver: Observer<PremiumCheckStatus> = Observer { premiumCheckStatus ->
         if( (premiumCheckStatus == PremiumCheckStatus.Premium && stateEventStream.value == State.NotPremium) ||
-            (premiumCheckStatus == PremiumCheckStatus.NotPremium && stateEventStream.value == State.Premium) ) {
+            (premiumCheckStatus == PremiumCheckStatus.NotPremium && stateEventStream.value == State.Premium) ||
+            (premiumCheckStatus == PremiumCheckStatus.Premium || premiumCheckStatus == PremiumCheckStatus.NotPremium) && stateEventStream.value == State.Loading ) {
             syncState(premiumCheckStatus == PremiumCheckStatus.Premium)
         }
 
@@ -42,7 +43,9 @@ class MainViewModel(private val billing: Billing,
                     sync.sendPremiumStatus(userPremium)
                 }
 
-                syncSucceedEvent.value = Unit
+                if( userPremium ) {
+                    syncSucceedEvent.value = Unit
+                }
                 stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
             } catch (t: Throwable) {
                 errorSyncingEvent.value = t

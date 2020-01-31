@@ -50,8 +50,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private var lowBitAmbient = false
         private var burnInProtection = false
 
-        private var lastVisibleTimestamp = 0L
-
         private val timeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 calendar.timeZone = TimeZone.getDefault()
@@ -158,8 +156,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
 
-            // Invalidate only if not in ambient mode && face is visible since more than 1s
-            if( !ambient &&  System.currentTimeMillis() - lastVisibleTimestamp >= 1000L ) {
+            if( !ambient ) {
                 invalidate()
             }
         }
@@ -204,8 +201,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 setComplicationsActiveAndAmbientColors(complicationsColors)
 
                 invalidate()
-
-                lastVisibleTimestamp = System.currentTimeMillis()
             } else {
                 unregisterReceiver()
             }
@@ -258,15 +253,15 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
             intArrayOf(
-                ComplicationData.TYPE_RANGED_VALUE,
-                ComplicationData.TYPE_ICON,
                 ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_RANGED_VALUE,
                 ComplicationData.TYPE_SMALL_IMAGE
             ),
             intArrayOf(
-                ComplicationData.TYPE_RANGED_VALUE,
-                ComplicationData.TYPE_ICON,
                 ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_RANGED_VALUE,
                 ComplicationData.TYPE_SMALL_IMAGE
             )
         )

@@ -18,7 +18,6 @@ import com.benoitletondor.pixelminimalwatchface.R
 import com.google.android.wearable.intent.RemoteIntent
 import kotlinx.android.synthetic.main.activity_complication_config.*
 
-
 class ComplicationConfigActivity : Activity() {
     private lateinit var adapter: ComplicationConfigRecyclerViewAdapter
 
