@@ -108,6 +108,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             burnInProtection = properties.getBoolean(
                 WatchFaceService.PROPERTY_BURN_IN_PROTECTION, false
             )
+
+            COMPLICATION_IDS.forEach {
+                complicationDrawableSparseArray[it].setLowBitAmbient(lowBitAmbient)
+            }
+
+            COMPLICATION_IDS.forEach {
+                complicationDrawableSparseArray[it].setBurnInProtection(burnInProtection)
+            }
         }
 
         override fun onApplyWindowInsets(insets: WindowInsets) {
@@ -125,6 +133,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onAmbientModeChanged(inAmbientMode: Boolean) {
             super.onAmbientModeChanged(inAmbientMode)
             ambient = inAmbientMode
+
+            COMPLICATION_IDS.forEach {
+                complicationDrawableSparseArray[it].setInAmbientMode(ambient)
+            }
 
             invalidate()
         }
