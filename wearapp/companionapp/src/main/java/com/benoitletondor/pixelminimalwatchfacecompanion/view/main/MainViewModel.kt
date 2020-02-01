@@ -28,6 +28,10 @@ class MainViewModel(private val billing: Billing,
         if( premiumCheckStatus is PremiumCheckStatus.Error && stateEventStream.value != State.Premium ) {
             stateEventStream.value = State.Error(premiumCheckStatus.error)
         }
+
+        if( premiumCheckStatus == PremiumCheckStatus.Checking && stateEventStream.value is State.Error ) {
+            stateEventStream.value = State.Loading
+        }
     }
 
     init {
