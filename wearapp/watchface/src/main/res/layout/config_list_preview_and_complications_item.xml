@@ -20,42 +20,52 @@
 
     <ImageView
         android:id="@+id/left_complication_background"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:src="@drawable/added_complication"
-        style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
         android:layout_marginTop="10dp"
+        android:layout_marginStart="16dp"
+        android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton
         android:id="@+id/left_complication"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
+        android:padding="10dp"
+        android:scaleType="centerInside"
         app:layout_constraintStart_toStartOf="@+id/left_complication_background"
-        app:layout_constraintTop_toTopOf="@+id/left_complication_background"/>
+        app:layout_constraintEnd_toEndOf="@+id/left_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/left_complication_background"
+        app:layout_constraintBottom_toBottomOf="@+id/left_complication_background"/>
 
     <ImageView
         android:id="@+id/right_complication_background"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:src="@drawable/added_complication"
-        style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
         android:layout_marginTop="10dp"
+        android:layout_marginEnd="16dp"
+        android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton
         android:id="@+id/right_complication"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         style="?android:borderlessButtonStyle"
         android:background="@android:color/transparent"
+        android:padding="10dp"
+        android:scaleType="centerInside"
         app:layout_constraintEnd_toEndOf="@+id/right_complication_background"
-        app:layout_constraintTop_toTopOf="@+id/right_complication_background" />
+        app:layout_constraintStart_toStartOf="@+id/right_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/right_complication_background"
+        app:layout_constraintBottom_toBottomOf="@+id/right_complication_background"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

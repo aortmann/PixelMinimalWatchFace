@@ -224,7 +224,8 @@ class PreviewAndComplicationsViewHolder(
     private val rightComplicationBackground: ImageView = view.findViewById(R.id.right_complication_background)
     private val leftComplication: ImageButton = view.findViewById(R.id.left_complication)
     private val rightComplication: ImageButton = view.findViewById(R.id.right_complication)
-    private var defaultComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
+    private var addComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
+    private var addedComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.added_complication)!!
 
     init {
         leftComplication.setOnClickListener(this)
@@ -232,10 +233,8 @@ class PreviewAndComplicationsViewHolder(
     }
 
     fun setDefaultComplicationDrawable() {
-        leftComplication.setImageDrawable(defaultComplicationDrawable)
-        leftComplicationBackground.visibility = View.INVISIBLE
-        rightComplication.setImageDrawable(defaultComplicationDrawable)
-        rightComplicationBackground.visibility = View.INVISIBLE
+        leftComplication.setImageDrawable(addComplicationDrawable)
+        rightComplication.setImageDrawable(addComplicationDrawable)
     }
 
     override fun onClick(view: View) {
@@ -272,23 +271,23 @@ class PreviewAndComplicationsViewHolder(
                                        complicationColors: ComplicationColors) {
         if (complicationProviderInfo != null) {
             button.setImageIcon(complicationProviderInfo.providerIcon)
-            background.visibility = View.VISIBLE
+            background.setImageDrawable(addedComplicationDrawable)
         } else {
-            button.setImageDrawable(defaultComplicationDrawable)
-            background.visibility = View.INVISIBLE
+            button.setImageIcon(null)
+            background.setImageDrawable(addComplicationDrawable)
         }
 
         updateComplicationsAccentColor(complicationColors)
     }
 
     fun updateComplicationsAccentColor(colors: ComplicationColors) {
-        if( rightComplication.drawable == defaultComplicationDrawable ) {
+        if( rightComplication.drawable == addComplicationDrawable ) {
             rightComplication.setColorFilter(Color.WHITE)
         } else {
             rightComplication.setColorFilter(colors.rightColor)
         }
 
-        if( leftComplication.drawable == defaultComplicationDrawable ) {
+        if( leftComplication.drawable == addComplicationDrawable ) {
             leftComplication.setColorFilter(Color.WHITE)
         } else {
             leftComplication.setColorFilter(colors.leftColor)
