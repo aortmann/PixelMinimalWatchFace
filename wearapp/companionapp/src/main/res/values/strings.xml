@@ -29,8 +29,8 @@
     <string name="feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
     <string name="feedback_send_subject" translatable="false">Pixel minimal watch face - Feedback</string>
     <string name="premium_1_title">2 configurable widgets, beautifully integrated</string>
-    <string name="premium_2_title">Configure widgets as you want</string>
-    <string name="premium_3_title">Choose widgets accent color</string>
+    <string name="premium_2_title">Choose the widgets you want</string>
+    <string name="premium_3_title">Pick the widgets accent color</string>
     <string name="sync_succeed_message">Sync done! Check your watch.</string>
     <string name="onboarding_title">Pixel Minimal Watch Face</string>
     <string name="onboarding_text">Buy premium mode and unlock widgets for your watch.\n\nIf you have any issue, please contact me using the app menu for support.</string>

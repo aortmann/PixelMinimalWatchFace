@@ -14,7 +14,6 @@ android {
         multiDexEnabled true
 
         buildConfigField "String", "COMPANION_APP_PLAYSTORE_URL", '"https://play.google.com/store/apps/details?id=com.benoitletondor.pixelminimalwatchface"'
-        buildConfigField "boolean", "FORCE_PREMIUM", 'true'
     }
     buildTypes {
         release {

@@ -2,7 +2,6 @@ package com.benoitletondor.pixelminimalwatchface.model
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.benoitletondor.pixelminimalwatchface.BuildConfig
 
 private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 
@@ -55,7 +54,7 @@ class StorageImpl : Storage {
     }
 
     override fun isUserPremium(): Boolean {
-        return sharedPreferences.getBoolean(KEY_USER_PREMIUM, false) || BuildConfig.FORCE_PREMIUM
+        return sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
     }
 
     override fun setUserPremium(premium: Boolean) {
