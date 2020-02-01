@@ -43,7 +43,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private val watchFaceDrawer = Injection.watchFaceDrawer()
 
         private lateinit var complicationsColors: ComplicationColors
-        private lateinit var activeComplicationDataSparseArray: SparseArray<ComplicationData>
         private lateinit var complicationDrawableSparseArray: SparseArray<ComplicationDrawable>
 
         private var muteMode = false
@@ -77,7 +76,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         private fun initializeComplications() {
             complicationsColors = storage.getComplicationColors()
-            activeComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             val leftComplicationDrawable = ComplicationDrawable(service)
             val rightComplicationDrawable = ComplicationDrawable(service)
@@ -165,14 +163,11 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData) {
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
 
-            // Adds/updates active complication data in the array.
-            activeComplicationDataSparseArray.put(watchFaceComplicationId, data)
-
             // Updates correct ComplicationDrawable with updated data.
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
 
-            watchFaceDrawer.updateComplicationColors(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
+            watchFaceDrawer.onComplicationDataUpdate(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
 
             if( !ambient ) {
                 invalidate()
@@ -242,7 +237,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
-            watchFaceDrawer.setComplicationsColors(complicationColors)
+            watchFaceDrawer.onComplicationColorsUpdate(complicationColors)
         }
 
         override fun onDataChanged(dataEvents: DataEventBuffer) {
@@ -260,15 +255,17 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
         }
 
-        override fun unscheduleDrawable(p0: Drawable, p1: Runnable) {
+        override fun unscheduleDrawable(who: Drawable, what: Runnable) {
             // No-op
         }
 
-        override fun invalidateDrawable(p0: Drawable) {
-            invalidate()
+        override fun invalidateDrawable(who: Drawable) {
+            if( !ambient ) {
+                invalidate()
+            }
         }
 
-        override fun scheduleDrawable(p0: Drawable, p1: Runnable, p2: Long) {
+        override fun scheduleDrawable(who: Drawable, what: Runnable, time: Long) {
             // No-op
         }
     }

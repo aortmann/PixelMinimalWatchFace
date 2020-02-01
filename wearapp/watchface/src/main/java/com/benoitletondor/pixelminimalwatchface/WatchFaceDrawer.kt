@@ -24,8 +24,8 @@ interface WatchFaceDrawer {
     fun onApplyWindowInsets(insets: WindowInsets)
     fun onSurfaceChanged(width: Int, height: Int)
     fun setComplicationDrawable(complicationId: Int, complicationDrawable: ComplicationDrawable)
-    fun setComplicationsColors(complicationColors: ComplicationColors)
-    fun updateComplicationColors(complicationId: Int,
+    fun onComplicationColorsUpdate(complicationColors: ComplicationColors)
+    fun onComplicationDataUpdate(complicationId: Int,
                                  complicationDrawable: ComplicationDrawable,
                                  data: ComplicationData?,
                                  complicationColors: ComplicationColors)
@@ -101,7 +101,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     }
 
     override fun onSurfaceChanged(width: Int, height: Int) {
-        drawingState = DrawingState.NoCache(
+        drawingState = DrawingState.NoCacheAvailable(
             width,
             height,
             width / 2f,
@@ -113,7 +113,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         complicationsDrawable[complicationId] = complicationDrawable
     }
 
-    override fun setComplicationsColors(complicationColors: ComplicationColors) {
+    override fun onComplicationColorsUpdate(complicationColors: ComplicationColors) {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
             val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
                 complicationColors.leftColor
@@ -128,7 +128,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
     }
 
-    override fun updateComplicationColors(complicationId: Int,
+    override fun onComplicationDataUpdate(complicationId: Int,
                                           complicationDrawable: ComplicationDrawable,
                                           data: ComplicationData?,
                                           complicationColors: ComplicationColors) {
@@ -156,17 +156,17 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         drawBackground(canvas)
 
         val currentDrawingState = drawingState
-        if( currentDrawingState is DrawingState.NoCache ) {
+        if( currentDrawingState is DrawingState.NoCacheAvailable ) {
             drawingState = currentDrawingState.buildCache()
         }
 
         val drawingState = drawingState
-        if( drawingState is  DrawingState.Cache ){
+        if( drawingState is  DrawingState.CacheAvailable ){
             drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection, storage.isUserPremium())
         }
     }
 
-    private fun DrawingState.NoCache.buildCache(): DrawingState.Cache {
+    private fun DrawingState.NoCacheAvailable.buildCache(): DrawingState.CacheAvailable {
         val timeText = "22:13"
         val timeTextBounds = Rect().apply {
             timePaint.getTextBounds(timeText, 0, timeText.length, this)
@@ -181,7 +181,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
         val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 20f
 
-        return DrawingState.Cache(
+        return DrawingState.CacheAvailable(
             screenWidth,
             screenHeight,
             centerX,
@@ -192,7 +192,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
     }
 
-    private fun DrawingState.NoCache.buildComplicationDrawingCache(bottomY: Float): ComplicationsDrawingCache {
+    private fun DrawingState.NoCacheAvailable.buildComplicationDrawingCache(bottomY: Float): ComplicationsDrawingCache {
         val wearOsImage = wearOSLogo
 
         val sizeOfComplication = (screenWidth / 4.5).toInt()
@@ -229,13 +229,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
     }
 
-    private fun DrawingState.Cache.draw(canvas: Canvas,
-                                        currentTime: Date,
-                                        muteMode: Boolean,
-                                        ambient:Boolean,
-                                        lowBitAmbient: Boolean,
-                                        burnInProtection: Boolean,
-                                        isUserPremium: Boolean) {
+    private fun DrawingState.CacheAvailable.draw(canvas: Canvas,
+                                                 currentTime: Date,
+                                                 muteMode: Boolean,
+                                                 ambient:Boolean,
+                                                 lowBitAmbient: Boolean,
+                                                 burnInProtection: Boolean,
+                                                 isUserPremium: Boolean) {
         val timeText = timeFormatter.format(currentTime)
         val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
         canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
@@ -284,17 +284,17 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
 private sealed class DrawingState {
     object NoScreenData : DrawingState()
-    data class NoCache(val screenWidth: Int,
-                       val screenHeight: Int,
-                       val centerX: Float,
-                       val centerY: Float) : DrawingState()
-    data class Cache(val screenWidth: Int,
-                     val screenHeight: Int,
-                     val centerX: Float,
-                     val centerY: Float,
-                     val timeYOffset: Float,
-                     val dateYOffset: Float,
-                     val complicationsDrawingCache: ComplicationsDrawingCache) : DrawingState()
+    data class NoCacheAvailable(val screenWidth: Int,
+                                val screenHeight: Int,
+                                val centerX: Float,
+                                val centerY: Float) : DrawingState()
+    data class CacheAvailable(val screenWidth: Int,
+                              val screenHeight: Int,
+                              val centerX: Float,
+                              val centerY: Float,
+                              val timeYOffset: Float,
+                              val dateYOffset: Float,
+                              val complicationsDrawingCache: ComplicationsDrawingCache) : DrawingState()
 }
 
 private data class ComplicationsDrawingCache(
