@@ -93,6 +93,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+            watchFaceDrawer.onComplicationColorsUpdate(complicationsColors)
         }
 
         override fun onDestroy() {
@@ -210,8 +211,11 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 /* Update time zone in case it changed while we weren't visible. */
                 calendar.timeZone = TimeZone.getDefault()
 
-                complicationsColors = storage.getComplicationColors()
-                setComplicationsActiveAndAmbientColors(complicationsColors)
+                val newComplicationColors = storage.getComplicationColors()
+                if( newComplicationColors != complicationsColors ) {
+                    complicationsColors = newComplicationColors
+                    setComplicationsActiveAndAmbientColors(complicationsColors)
+                }
 
                 invalidate()
             } else {
