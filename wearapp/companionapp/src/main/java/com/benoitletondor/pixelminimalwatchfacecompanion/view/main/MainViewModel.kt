@@ -8,11 +8,14 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.SingleLiveEvent
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumCheckStatus
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumPurchaseFlowResult
+import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
-                    private val sync: Sync) : ViewModel(), CoroutineScope by MainScope() {
+                    private val sync: Sync,
+                    storage: Storage) : ViewModel(), CoroutineScope by MainScope() {
+    val launchOnboardingEvent = SingleLiveEvent<Unit>()
     val errorSyncingEvent = SingleLiveEvent<Throwable>()
     val errorPayingEvent = SingleLiveEvent<Throwable>()
     val syncSucceedEvent = SingleLiveEvent<Unit>()
@@ -36,6 +39,10 @@ class MainViewModel(private val billing: Billing,
 
     init {
         billing.userPremiumEventStream.observeForever(userPremiumEventObserver)
+
+        if( !storage.isOnboardingFinished() ) {
+            launchOnboardingEvent.value = Unit
+        }
     }
 
     private fun syncState(userPremium: Boolean) {

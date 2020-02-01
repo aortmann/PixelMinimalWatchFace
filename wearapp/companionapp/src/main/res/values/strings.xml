@@ -3,13 +3,13 @@
 
     <string name="loading_premium_status">Loading…</string>
     <string name="premium_status">You\'re premium!</string>
-    <string name="premium_status_2">You can setup your watch face widgets on your watch!\n\nThank you so much for your support :)</string>
+    <string name="premium_status_2">You can setup your watch face widgets on your watch!\nIf you have any issue, please contact me using the menu.\n\nThank you so much for your support :)</string>
     <string name="premium_sync_cta">Sync premium status with Watch</string>
     <string name="premium_error_title">Oops</string>
     <string name="premium_error">Unable to reach PlayStore to verify your premium status.\n\nPlease check your connection and try again.\n(%s)</string>
     <string name="error_retry_cta">Retry</string>
     <string name="syncing_premium_status">Syncing with watch…</string>
-    <string name="not_premium_status">To enable widgets on your watch face, please consider becoming a premium user.</string>
+    <string name="not_premium_status">To enable widgets on your watch face, become a premium user:</string>
     <string name="not_premium_status_2">(1 time payment, no hidden fees)</string>
     <string name="premium_cta">Become premium</string>
     <string name="promocode_cta">Redeem code</string>
@@ -32,4 +32,7 @@
     <string name="premium_2_title">Configure widgets as you want</string>
     <string name="premium_3_title">Choose widgets accent color</string>
     <string name="sync_succeed_message">Sync done! Check your watch.</string>
+    <string name="onboarding_title">Pixel Minimal Watch Face</string>
+    <string name="onboarding_text">Buy premium mode and unlock widgets for your watch.\n\nIf you have any issue, please contact me using the app menu for support.</string>
+    <string name="onboarding_finish_cta">Let\'s go</string>
 </resources>

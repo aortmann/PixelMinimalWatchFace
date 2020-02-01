@@ -14,6 +14,7 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
+import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
 import org.koin.android.viewmodel.ext.android.viewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URLEncoder
@@ -100,6 +101,10 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.syncSucceedEvent.observe(this, Observer {
             Toast.makeText(this, R.string.sync_succeed_message, Toast.LENGTH_LONG).show()
+        })
+
+        viewModel.launchOnboardingEvent.observe(this, Observer {
+            startActivity(Intent(this, OnboardingActivity::class.java))
         })
 
         main_activity_error_view_retry_button.setOnClickListener {

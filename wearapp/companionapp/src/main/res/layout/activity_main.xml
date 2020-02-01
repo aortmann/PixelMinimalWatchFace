@@ -36,6 +36,7 @@
             android:layout_height="wrap_content"
             android:text="@string/loading_premium_status"
             android:gravity="center_horizontal"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@+id/main_activity_loading_view_progress_bar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -67,6 +68,7 @@
                 android:textSize="20sp"
                 android:layout_marginTop="20dp"
                 android:textStyle="bold"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -79,6 +81,7 @@
                 android:gravity="center_horizontal"
                 android:textSize="16sp"
                 android:layout_marginTop="20dp"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toBottomOf="@+id/main_activity_premium_view_premium_text"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -122,6 +125,7 @@
                 android:textSize="22sp"
                 android:layout_marginTop="20dp"
                 android:text="@string/premium_error_title"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -133,6 +137,7 @@
                 android:gravity="center_horizontal"
                 android:textSize="16sp"
                 android:layout_marginTop="20dp"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toBottomOf="@+id/main_activity_error_view_text"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -181,6 +186,7 @@
             android:layout_height="wrap_content"
             android:text="@string/syncing_premium_status"
             android:gravity="center_horizontal"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@+id/main_activity_syncing_view_progress_bar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
@@ -231,6 +237,7 @@
                 android:gravity="center_horizontal"
                 android:textSize="16sp"
                 android:layout_marginTop="10dp"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toBottomOf="@+id/main_activity_not_premium_view_not_premium_view_pager_indicator"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -253,6 +260,7 @@
                 android:text="@string/not_premium_status_2"
                 android:gravity="center_horizontal"
                 android:textSize="13sp"
+                android:textColor="@android:color/white"
                 app:layout_constraintTop_toBottomOf="@+id/main_activity_not_premium_view_buy_button"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
