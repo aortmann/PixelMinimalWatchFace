@@ -56,7 +56,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var wearOSLogo: Bitmap
     private lateinit var wearOSLogoAmbient: Bitmap
     private lateinit var productSansRegularFont: Typeface
-    private lateinit var timeFormatter: SimpleDateFormat
+    private lateinit var timeFormatter24H: SimpleDateFormat
+    private lateinit var timeFormatter12H: SimpleDateFormat
 
     override fun onCreate(context: Context, storage: Storage) {
         this.context = context
@@ -72,7 +73,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         wearOSLogo = ContextCompat.getDrawable(context, R.drawable.ic_wear_os_logo)!!.toBitmap()
         wearOSLogoAmbient = ContextCompat.getDrawable(context, R.drawable.ic_wear_os_logo_ambient)!!.toBitmap()
         productSansRegularFont = ResourcesCompat.getFont(context, R.font.product_sans_regular)!!
-        timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        timeFormatter24H = SimpleDateFormat("HH:mm", Locale.getDefault())
+        timeFormatter12H = SimpleDateFormat("H:mm", Locale.getDefault())
         timePaint = Paint().apply {
             typeface = productSansRegularFont
             strokeWidth = 1.5f
@@ -236,7 +238,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                                  lowBitAmbient: Boolean,
                                                  burnInProtection: Boolean,
                                                  isUserPremium: Boolean) {
-        val timeText = timeFormatter.format(currentTime)
+        val timeText = if( storage.getUse24hTimeFormat()) {
+            timeFormatter24H.format(currentTime)
+        } else {
+            timeFormatter12H.format(currentTime)
+        }
         val timeXOffset = centerX - (timePaint.measureText(timeText) / 2f)
         canvas.drawText(timeText, timeXOffset, timeYOffset, timePaint)
 

@@ -13,10 +13,7 @@ import android.support.wearable.complications.ProviderInfoRetriever.OnProviderIn
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.benoitletondor.pixelminimalwatchface.BuildConfig
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace
@@ -33,11 +30,13 @@ private const val TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG = 1
 private const val TYPE_COLOR_CONFIG = 2
 private const val TYPE_FOOTER = 3
 private const val TYPE_BECOME_PREMIUM = 4
+private const val TYPE_HOUR_FORMAT = 5
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
-    private val premiumClickListener: () -> Unit
+    private val premiumClickListener: () -> Unit,
+    private val hourFormatSelectionListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -100,6 +99,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 premiumClickListener
             )
+            TYPE_HOUR_FORMAT -> return HourFormatViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_hour_format,
+                    parent,
+                    false
+                ),
+                hourFormatSelectionListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -111,6 +118,10 @@ class ComplicationConfigRecyclerViewAdapter(
 
                 previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
                 initializesColorsAndComplications()
+            }
+            TYPE_HOUR_FORMAT -> {
+                val use24hTimeFormat = storage.getUse24hTimeFormat()
+                (viewHolder as HourFormatViewHolder).setHourFormatSwitchChecked(use24hTimeFormat)
             }
         }
     }
@@ -140,12 +151,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 0 -> TYPE_HEADER
                 1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
                 2 -> TYPE_COLOR_CONFIG
+                3 -> TYPE_HOUR_FORMAT
                 else -> TYPE_FOOTER
             }
         } else {
             when (position) {
                 0 -> TYPE_HEADER
                 1 -> TYPE_BECOME_PREMIUM
+                2 -> TYPE_HOUR_FORMAT
                 else -> TYPE_FOOTER
             }
         }
@@ -154,9 +167,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            4
+            5
         } else {
-            3
+            4
         }
     }
 
@@ -313,5 +326,20 @@ class PremiumViewHolder(view: View,
         premiumButton.setOnClickListener {
             premiumClickListener()
         }
+    }
+}
+
+class HourFormatViewHolder(view: View,
+                           hourFormatClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val hourFormatSwitch: Switch = view as Switch
+
+    init {
+        hourFormatSwitch.setOnCheckedChangeListener { _, checked ->
+            hourFormatClickListener(checked)
+        }
+    }
+
+    fun setHourFormatSwitchChecked(checked: Boolean) {
+        hourFormatSwitch.isChecked = checked
     }
 }

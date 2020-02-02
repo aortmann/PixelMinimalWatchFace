@@ -20,14 +20,17 @@ import kotlinx.android.synthetic.main.activity_complication_config.*
 
 class ComplicationConfigActivity : Activity() {
     private lateinit var adapter: ComplicationConfigRecyclerViewAdapter
+    private val storage = Injection.storage()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_complication_config)
 
-        adapter = ComplicationConfigRecyclerViewAdapter(this, Injection.storage()) {
+        adapter = ComplicationConfigRecyclerViewAdapter(this, storage, {
             openAppInStoreOnPhone()
-        }
+        }, { use24hTimeFormat ->
+            storage.setUse24hTimeFormat(use24hTimeFormat)
+        })
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true
         wearable_recycler_view.layoutManager = LinearLayoutManager(this)

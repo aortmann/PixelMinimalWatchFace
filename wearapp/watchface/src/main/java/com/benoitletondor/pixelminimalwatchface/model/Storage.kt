@@ -8,6 +8,7 @@ private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 private const val DEFAULT_COMPLICATION_COLOR = -147282
 private const val KEY_COMPLICATION_COLORS = "complicationColors"
 private const val KEY_USER_PREMIUM = "user_premium"
+private const val KEY_USE_24H_TIME_FORMAT = "use24hTimeFormat"
 
 interface Storage {
     fun init(context: Context)
@@ -15,6 +16,8 @@ interface Storage {
     fun setComplicationColors(complicationColors: ComplicationColors)
     fun isUserPremium(): Boolean
     fun setUserPremium(premium: Boolean)
+    fun setUse24hTimeFormat(use: Boolean)
+    fun getUse24hTimeFormat(): Boolean
 }
 
 class StorageImpl : Storage {
@@ -59,5 +62,13 @@ class StorageImpl : Storage {
 
     override fun setUserPremium(premium: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_USER_PREMIUM, premium).apply()
+    }
+
+    override fun setUse24hTimeFormat(use: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_USE_24H_TIME_FORMAT, use).apply()
+    }
+
+    override fun getUse24hTimeFormat(): Boolean {
+        return sharedPreferences.getBoolean(KEY_USE_24H_TIME_FORMAT, true)
     }
 }
