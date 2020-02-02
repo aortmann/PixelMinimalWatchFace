@@ -27,7 +27,7 @@
     <string name="send_feedback_cta">Send feedback or report bug</string>
     <string name="copyright">Version %s. Made by Benoit Letondor</string>
     <string name="feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
-    <string name="feedback_send_subject" translatable="false">Pixel minimal watch face - Feedback</string>
+    <string name="feedback_send_subject" translatable="false">Pixel Watch Face - Feedback</string>
     <string name="premium_1_title">2 configurable widgets, beautifully integrated</string>
     <string name="premium_2_title">Choose the widgets you want</string>
     <string name="premium_3_title">Pick the widgets accent color</string>
