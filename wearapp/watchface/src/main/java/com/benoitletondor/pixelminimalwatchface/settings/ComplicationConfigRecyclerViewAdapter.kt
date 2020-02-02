@@ -31,12 +31,14 @@ private const val TYPE_COLOR_CONFIG = 2
 private const val TYPE_FOOTER = 3
 private const val TYPE_BECOME_PREMIUM = 4
 private const val TYPE_HOUR_FORMAT = 5
+private const val TYPE_SEND_FEEDBACK = 6
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
     private val premiumClickListener: () -> Unit,
-    private val hourFormatSelectionListener: (Boolean) -> Unit
+    private val hourFormatSelectionListener: (Boolean) -> Unit,
+    private val onFeedbackButtonPressed: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -107,6 +109,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 hourFormatSelectionListener
             )
+            TYPE_SEND_FEEDBACK -> return SendFeedbackViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_feedback,
+                    parent,
+                    false
+                ),
+                onFeedbackButtonPressed
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -152,6 +162,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
                 2 -> TYPE_COLOR_CONFIG
                 3 -> TYPE_HOUR_FORMAT
+                4 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
@@ -159,6 +170,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 0 -> TYPE_HEADER
                 1 -> TYPE_BECOME_PREMIUM
                 2 -> TYPE_HOUR_FORMAT
+                3 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -167,9 +179,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            5
+            6
         } else {
-            4
+            5
         }
     }
 
@@ -341,5 +353,14 @@ class HourFormatViewHolder(view: View,
 
     fun setHourFormatSwitchChecked(checked: Boolean) {
         hourFormatSwitch.isChecked = checked
+    }
+}
+
+class SendFeedbackViewHolder(view: View,
+                             onFeedbackButtonPressed: () -> Unit) : RecyclerView.ViewHolder(view) {
+    init {
+        view.setOnClickListener {
+            onFeedbackButtonPressed()
+        }
     }
 }

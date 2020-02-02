@@ -1,5 +1,8 @@
 package com.benoitletondor.pixelminimalwatchface
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -7,6 +10,7 @@ import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
@@ -17,13 +21,18 @@ import android.util.SparseArray
 import android.view.SurfaceHolder
 import android.view.WindowInsets
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
+import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
 import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
 import com.google.android.gms.wearable.*
 import java.util.*
 
+private const val MISC_NOTIFICATION_CHANNEL_ID = "rating"
 private const val DATA_KEY_PREMIUM = "premium"
+private const val THREE_DAYS_MS: Long = 1000 * 60 * 60 * 24 * 3
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
@@ -129,6 +138,12 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         override fun onTimeTick() {
             super.onTimeTick()
+
+            if( !storage.hasRatingNotificationBeenSend() &&
+                System.currentTimeMillis() - storage.getInstallTimestamp() > THREE_DAYS_MS ) {
+                storage.setRatingNotificationSent(true)
+                sendRatingNotification()
+            }
 
             invalidate()
         }
@@ -271,6 +286,33 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         override fun scheduleDrawable(who: Drawable, what: Runnable, time: Long) {
             // No-op
+        }
+
+        private fun sendRatingNotification() {
+            // Create notification channel if needed
+            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ) {
+                val importance = NotificationManager.IMPORTANCE_DEFAULT
+                val mChannel = NotificationChannel(MISC_NOTIFICATION_CHANNEL_ID, getString(R.string.misc_notification_channel_name), importance)
+                mChannel.description = getString(R.string.misc_notification_channel_description)
+
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.createNotificationChannel(mChannel)
+            }
+
+            val activityIntent = Intent(service, FeedbackActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(service, 0, activityIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+
+            val notification = NotificationCompat.Builder(service, MISC_NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(getString(R.string.rating_notification_title))
+                .setContentText(getString(R.string.rating_notification_message))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(getString(R.string.rating_notification_message)))
+                .addAction(NotificationCompat.Action(R.drawable.ic_feedback, getString(R.string.rating_notification_cta), pendingIntent))
+                .setAutoCancel(true)
+                .build()
+
+
+            NotificationManagerCompat.from(service).notify(193828, notification)
         }
     }
 

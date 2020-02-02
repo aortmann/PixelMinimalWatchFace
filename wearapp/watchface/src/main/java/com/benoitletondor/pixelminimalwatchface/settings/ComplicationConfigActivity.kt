@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.benoitletondor.pixelminimalwatchface.BuildConfig.COMPANION_APP_PLAYSTORE_URL
 import com.benoitletondor.pixelminimalwatchface.Injection
 import com.benoitletondor.pixelminimalwatchface.R
+import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
 import com.google.android.wearable.intent.RemoteIntent
 import kotlinx.android.synthetic.main.activity_complication_config.*
 
@@ -30,6 +31,8 @@ class ComplicationConfigActivity : Activity() {
             openAppInStoreOnPhone()
         }, { use24hTimeFormat ->
             storage.setUse24hTimeFormat(use24hTimeFormat)
+        }, {
+            startActivity(Intent(this, FeedbackActivity::class.java))
         })
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true
