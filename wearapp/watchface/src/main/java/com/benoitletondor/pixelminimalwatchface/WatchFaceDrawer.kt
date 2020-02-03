@@ -1,3 +1,18 @@
+/*
+ *   Copyright 2020 Benoit LETONDOR
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
 package com.benoitletondor.pixelminimalwatchface
 
 import android.content.Context
@@ -74,7 +89,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         wearOSLogoAmbient = ContextCompat.getDrawable(context, R.drawable.ic_wear_os_logo_ambient)!!.toBitmap()
         productSansRegularFont = ResourcesCompat.getFont(context, R.font.product_sans_regular)!!
         timeFormatter24H = SimpleDateFormat("HH:mm", Locale.getDefault())
-        timeFormatter12H = SimpleDateFormat("H:mm", Locale.getDefault())
+        timeFormatter12H = SimpleDateFormat("h:mm", Locale.getDefault())
         timePaint = Paint().apply {
             typeface = productSansRegularFont
             strokeWidth = 1.5f

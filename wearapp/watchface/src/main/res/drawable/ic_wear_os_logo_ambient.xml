@@ -1,3 +1,18 @@
+<!--
+   Copyright 2020 Benoit LETONDOR
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
 <vector android:height="20dp" android:viewportHeight="33"
         android:viewportWidth="47" android:width="28dp" xmlns:android="http://schemas.android.com/apk/res/android">
     <path android:strokeColor="#5484F8" android:strokeWidth="1"  android:pathData="M3.1004,0.8422C5.364,-0.1019 7.978,0.9358 8.9388,3.16L19.027,26.5118C19.9878,28.736 18.9317,31.3044 16.6681,32.2485C14.4044,33.1926 11.7905,32.1549 10.8296,29.9307L0.7415,6.5789C-0.2194,4.3547 0.8367,1.7863 3.1004,0.8422Z"/>
