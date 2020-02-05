@@ -47,6 +47,7 @@ class ComplicationConfigActivity : Activity() {
         }, { use24hTimeFormat ->
             storage.setUse24hTimeFormat(use24hTimeFormat)
         }, {
+            storage.setRatingDisplayed(true)
             startActivity(Intent(this, FeedbackActivity::class.java))
         })
 

@@ -36,8 +36,8 @@ interface Storage {
     fun setUse24hTimeFormat(use: Boolean)
     fun getUse24hTimeFormat(): Boolean
     fun getInstallTimestamp(): Long
-    fun hasRatingNotificationBeenSend(): Boolean
-    fun setRatingNotificationSent(sent: Boolean)
+    fun hasRatingBeenDisplayed(): Boolean
+    fun setRatingDisplayed(sent: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -100,11 +100,11 @@ class StorageImpl : Storage {
         return sharedPreferences.getLong(KEY_INSTALL_TIMESTAMP, -1)
     }
 
-    override fun hasRatingNotificationBeenSend(): Boolean {
+    override fun hasRatingBeenDisplayed(): Boolean {
         return sharedPreferences.getBoolean(KEY_RATING_NOTIFICATION_SENT, false)
     }
 
-    override fun setRatingNotificationSent(sent: Boolean) {
+    override fun setRatingDisplayed(sent: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_RATING_NOTIFICATION_SENT, sent).apply()
     }
 }

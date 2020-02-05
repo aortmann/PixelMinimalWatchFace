@@ -154,9 +154,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onTimeTick() {
             super.onTimeTick()
 
-            if( !storage.hasRatingNotificationBeenSend() &&
+            if( !storage.hasRatingBeenDisplayed() &&
                 System.currentTimeMillis() - storage.getInstallTimestamp() > THREE_DAYS_MS ) {
-                storage.setRatingNotificationSent(true)
+                storage.setRatingDisplayed(true)
                 sendRatingNotification()
             }
 
