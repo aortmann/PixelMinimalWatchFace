@@ -71,10 +71,10 @@ class App : Application() {
     }
 
     private fun onAppForeground() {
-
+        billing.updatePremiumStatusIfNeeded()
     }
 
     private fun onAppBackground() {
-        billing.updatePremiumStatusIfNeeded()
+
     }
 }
