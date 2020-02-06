@@ -1,0 +1,77 @@
+<!--
+   Copyright 2020 Benoit LETONDOR
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Pixel Minimal Watch Face</string>
+    <string name="complication_config">Configure widgets</string>
+
+    <string name="config_complications_color_label">Widgets accent color</string>
+    <string name="config_premium_text">To setup widgets you have to become a premium user. Install the companion app on your phone to continue</string>
+    <string name="config_premium_button_cta">Open companion app on phone</string>
+    <string name="config_feedback_cta">Give your feedback</string>
+    <string name="config_version">Version: %s</string>
+    <string name="config_footer">Made by Benoit Letondor</string>
+    <string name="config_hour_format_24h">Use 24h time</string>
+
+    <string name="premium_confirmation">Configure widgets in Watch Face settings</string>
+    <string name="open_phone_url_android_device">Continue on phone</string>
+    <string name="open_phone_url_ios_device">You need an Android phone to install the companion app.</string>
+    <string name="open_phone_url_android_not_reachable">An error occurred. Check connection and try again.</string>
+    <string name="open_phone_url_fail">Oops, an error occurred, try again later.</string>
+
+    <string name="misc_notification_channel_name">Misc</string>
+    <string name="misc_notification_channel_description">Help improve the product by asking for your feedback</string>
+    <string name="rating_notification_title">Enjoy Pixel Minimal Watch Face?</string>
+    <string name="rating_notification_message">How do you like it so far?</string>
+    <string name="rating_notification_cta">Give feedback</string>
+    <string name="rating_popup_question_title">What do you think of Pixel Minimal Watch Face?</string>
+    <string name="rating_popup_question_message">I develop it on my free time, doing the best I can to make it look great.\nThere still might be things to improve so I would really appreciate your feedback.</string>
+    <string name="rating_popup_question_cta_negative">-> I don\'t like it</string>
+    <string name="rating_popup_question_cta_positive">-> I like it</string>
+    <string name="rating_popup_negative_title">:(</string>
+    <string name="rating_popup_negative_message">I\'m sad to hear that.\n\nWould you mind sending me your feedback using your phone?</string>
+    <string name="rating_popup_negative_cta_negative">-> No thanks</string>
+    <string name="rating_popup_negative_cta_positive">-> Sure</string>
+    <string name="rating_popup_positive_title">:)</string>
+    <string name="rating_popup_positive_message">I\'m glad you enjoy it.\n\nWould you mind giving it a positive review on the PlayStore?\nIt would really help me a lot!</string>
+    <string name="rating_popup_positive_cta_negative">-> No thanks</string>
+    <string name="rating_popup_positive_cta_positive">-> Sure</string>
+    <string name="rating_feedback_send_error">Unable to open feedback email.\nInstall the app on your phone to send your feedback.</string>
+    <string name="rating_feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
+    <string name="rating_feedback_send_subject" translatable="false">Pixel Watch Face - Feedback</string>
+    <string name="rating_feedback_send_text"></string>
+
+    <string name="color_default">Wear OS colors</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_light_blue">Light blue</string>
+    <string name="color_grey">Grey</string>
+    <string name="color_blue_grey">Blue grey</string>
+    <string name="color_green">Green</string>
+    <string name="color_red">Red</string>
+    <string name="color_white">White</string>
+    <string name="color_amber">Amber</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_deep_orange">Deep orange</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_deep_purple">Deep purple</string>
+    <string name="color_indigo">Indigo</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_lime_green">Lime green</string>
+    <string name="color_lime">Lime</string>
+    <string name="color_brown">Brown</string>
+</resources>
