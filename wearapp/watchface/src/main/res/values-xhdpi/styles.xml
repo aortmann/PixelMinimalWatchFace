@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="ButtonConfigurationStyle" parent="Base.ButtonConfigurationStyle">
-        <item name="android:padding">6dp</item>
-        <item name="android:textSize">12sp</item>
-    </style>
-</resources>
