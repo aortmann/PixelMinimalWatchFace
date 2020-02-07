@@ -21,6 +21,7 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
+import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
@@ -39,7 +40,7 @@ interface WatchFaceDrawer {
     fun onApplyWindowInsets(insets: WindowInsets)
     fun onSurfaceChanged(width: Int, height: Int)
     fun setComplicationDrawable(complicationId: Int, complicationDrawable: ComplicationDrawable)
-    fun onComplicationColorsUpdate(complicationColors: ComplicationColors)
+    fun onComplicationColorsUpdate(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>)
     fun onComplicationDataUpdate(complicationId: Int,
                                  complicationDrawable: ComplicationDrawable,
                                  data: ComplicationData?,
@@ -130,7 +131,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         complicationsDrawable[complicationId] = complicationDrawable
     }
 
-    override fun onComplicationColorsUpdate(complicationColors: ComplicationColors) {
+    override fun onComplicationColorsUpdate(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>) {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
             val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
                 complicationColors.leftColor
@@ -142,6 +143,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             complicationDrawable.setIconColorActive(primaryComplicationColor)
             complicationDrawable.setTextTypefaceActive(productSansRegularFont)
             complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
+
+            onComplicationDataUpdate(complicationId, complicationDrawable, complicationsData.get(complicationId), complicationColors)
         }
     }
 
@@ -178,7 +181,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
 
         val drawingState = drawingState
-        if( drawingState is  DrawingState.CacheAvailable ){
+        if( drawingState is DrawingState.CacheAvailable ){
             drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection, storage.isUserPremium())
         }
     }

@@ -67,6 +67,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private val watchFaceDrawer = Injection.watchFaceDrawer()
 
         private lateinit var complicationsColors: ComplicationColors
+        private lateinit var complicationDataSparseArray: SparseArray<ComplicationData>
         private lateinit var complicationDrawableSparseArray: SparseArray<ComplicationDrawable>
 
         private var muteMode = false
@@ -105,6 +106,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val rightComplicationDrawable = ComplicationDrawable(service)
 
             complicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
+            complicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
@@ -116,7 +118,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
-            watchFaceDrawer.onComplicationColorsUpdate(complicationsColors)
+            watchFaceDrawer.onComplicationColorsUpdate(complicationsColors, complicationDataSparseArray)
         }
 
         override fun onDestroy() {
@@ -197,6 +199,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
 
+            complicationDataSparseArray.put(watchFaceComplicationId, data)
+
             watchFaceDrawer.onComplicationDataUpdate(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
 
             if( !ambient ) {
@@ -270,7 +274,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun setComplicationsActiveAndAmbientColors(complicationColors: ComplicationColors) {
-            watchFaceDrawer.onComplicationColorsUpdate(complicationColors)
+            watchFaceDrawer.onComplicationColorsUpdate(complicationColors, complicationDataSparseArray)
         }
 
         override fun onDataChanged(dataEvents: DataEventBuffer) {
