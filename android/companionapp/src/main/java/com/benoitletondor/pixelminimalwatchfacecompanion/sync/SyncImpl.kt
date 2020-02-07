@@ -24,6 +24,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 private const val KEY_PREMIUM = "premium"
+private const val KEY_TIMESTAMP = "ts"
 
 class SyncImpl(context: Context) : Sync {
     private val dataClient = Wearable.getDataClient(context)
@@ -31,6 +32,7 @@ class SyncImpl(context: Context) : Sync {
     override suspend fun sendPremiumStatus(isUserPremium: Boolean) {
         val putDataRequest = PutDataMapRequest.create("/premium").run {
             dataMap.putBoolean(KEY_PREMIUM, isUserPremium)
+            dataMap.putLong(KEY_TIMESTAMP, System.currentTimeMillis())
             asPutDataRequest()
         }
 
