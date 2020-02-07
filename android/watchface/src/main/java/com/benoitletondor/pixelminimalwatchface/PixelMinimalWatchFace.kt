@@ -112,7 +112,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             leftComplicationDrawable.callback = this
             rightComplicationDrawable.callback = this
 
-            setComplicationsActiveAndAmbientColors(complicationsColors)
             setActiveComplications(*COMPLICATION_IDS)
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
