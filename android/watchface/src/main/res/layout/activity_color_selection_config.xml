@@ -26,6 +26,13 @@
         android:id="@+id/colors_recycler_view"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        app:circular_scrolling_gesture_enabled="true" />
+        app:circular_scrolling_gesture_enabled="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <requestFocus />
+
+    </androidx.wear.widget.WearableRecyclerView>
+
 
 </FrameLayout>
