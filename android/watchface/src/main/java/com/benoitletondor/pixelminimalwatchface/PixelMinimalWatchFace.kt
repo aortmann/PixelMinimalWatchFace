@@ -27,7 +27,10 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.ComplicationText
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
@@ -43,11 +46,15 @@ import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
 import com.benoitletondor.pixelminimalwatchface.settings.ComplicationLocation
 import com.google.android.gms.wearable.*
+import java.lang.ref.WeakReference
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 private const val MISC_NOTIFICATION_CHANNEL_ID = "rating"
 private const val DATA_KEY_PREMIUM = "premium"
 private const val THREE_DAYS_MS: Long = 1000 * 60 * 60 * 24 * 3
+private const val MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS = 1000L
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
@@ -56,6 +63,37 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         storage.init(this)
 
         return Engine(this, storage)
+    }
+
+    private class ComplicationTimeDependentUpdateHandler(private val engine: WeakReference<Engine>,
+                                                         private var hasUpdateScheduled: Boolean = false) : Handler() {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+
+            val engine = engine.get() ?: return
+
+            hasUpdateScheduled = false
+
+            if( !engine.isAmbientMode() && engine.isVisible ) {
+                engine.invalidate()
+            }
+        }
+
+        fun cancelUpdate() {
+            hasUpdateScheduled = false
+            removeMessages(MSG_UPDATE_TIME)
+        }
+
+        fun scheduleUpdate(delay: Long) {
+            hasUpdateScheduled = true
+            sendEmptyMessageDelayed(MSG_UPDATE_TIME, delay)
+        }
+
+        fun hasUpdateScheduled(): Boolean = hasUpdateScheduled
+
+        companion object {
+            private const val MSG_UPDATE_TIME = 0
+        }
     }
 
     inner class Engine(private val service: WatchFaceService,
@@ -74,6 +112,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private var ambient = false
         private var lowBitAmbient = false
         private var burnInProtection = false
+
+        private val timeDependentUpdateHandler = ComplicationTimeDependentUpdateHandler(WeakReference(this))
+        private val timeDependentTexts = SparseArray<ComplicationText>()
 
         private val timeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -124,12 +165,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onDestroy() {
             unregisterReceiver()
             Wearable.getDataClient(service).removeListener(this)
+            timeDependentUpdateHandler.cancelUpdate()
 
             super.onDestroy()
         }
 
         override fun onPropertiesChanged(properties: Bundle) {
             super.onPropertiesChanged(properties)
+
             lowBitAmbient = properties.getBoolean(
                 WatchFaceService.PROPERTY_LOW_BIT_AMBIENT, false
             )
@@ -144,6 +187,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             COMPLICATION_IDS.forEach {
                 complicationDrawableSparseArray[it].setBurnInProtection(burnInProtection)
             }
+
+            invalidate()
         }
 
         override fun onApplyWindowInsets(insets: WindowInsets) {
@@ -203,6 +248,15 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             watchFaceDrawer.onComplicationDataUpdate(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
 
+            val nextShortTextChangeTime = data.shortText?.getNextChangeTime(System.currentTimeMillis())
+            if( nextShortTextChangeTime != null && nextShortTextChangeTime < Long.MAX_VALUE ) {
+                timeDependentTexts.put(watchFaceComplicationId, data.shortText)
+            } else {
+                timeDependentTexts.remove(watchFaceComplicationId)
+            }
+
+            timeDependentUpdateHandler.cancelUpdate()
+
             if( !ambient ) {
                 invalidate()
             }
@@ -233,7 +287,45 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 lowBitAmbient,
                 burnInProtection
             )
+
+            if( !timeDependentUpdateHandler.hasUpdateScheduled() ) {
+                val nextUpdateTs = getNextComplicationUpdateDelay()
+                if( nextUpdateTs != null ) {
+                    timeDependentUpdateHandler.scheduleUpdate(nextUpdateTs)
+                }
+            }
         }
+
+        private fun getNextComplicationUpdateDelay(): Long? {
+            var leftUpdateTs = Long.MAX_VALUE
+
+            val timeDependentLeftText = timeDependentTexts.get(LEFT_COMPLICATION_ID)
+            if( timeDependentLeftText != null ) {
+                val nextTimeLeft = timeDependentLeftText.getNextChangeTime(calendar.timeInMillis)
+                if( nextTimeLeft < Long.MAX_VALUE ) {
+                    leftUpdateTs = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeLeft)
+                }
+            }
+
+            var rightUpdateTs = Long.MAX_VALUE
+
+            val timeDependentRightText = timeDependentTexts.get(RIGHT_COMPLICATION_ID)
+            if( timeDependentRightText != null ) {
+                val nextTimeRight = timeDependentRightText.getNextChangeTime(calendar.timeInMillis)
+                if( nextTimeRight < Long.MAX_VALUE ) {
+                    rightUpdateTs = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeRight)
+                }
+            }
+
+            val min = min(leftUpdateTs, rightUpdateTs)
+            if( min == Long.MAX_VALUE ) {
+                return null
+            }
+
+            return min
+        }
+
+        fun isAmbientMode(): Boolean = ambient
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
