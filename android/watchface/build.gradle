@@ -28,8 +28,8 @@ android {
         applicationId "com.benoitletondor.pixelminimalwatchface"
         minSdkVersion 25
         targetSdkVersion 29
-        versionCode 6
-        versionName "1.0.1"
+        versionCode 7
+        versionName "1.0.2"
         multiDexEnabled true
 
         buildConfigField "String", "COMPANION_APP_PLAYSTORE_URL", '"https://play.google.com/store/apps/details?id=com.benoitletondor.pixelminimalwatchface"'
