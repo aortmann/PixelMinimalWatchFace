@@ -254,6 +254,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             watchFaceDrawer.onComplicationDataUpdate(watchFaceComplicationId, complicationDrawable, data, complicationsColors)
 
+            // Update time dependent complication
             val nextShortTextChangeTime = data.shortText?.getNextChangeTime(System.currentTimeMillis())
             if( nextShortTextChangeTime != null && nextShortTextChangeTime < Long.MAX_VALUE ) {
                 timeDependentTexts.put(watchFaceComplicationId, data.shortText)
@@ -294,7 +295,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 burnInProtection
             )
 
-            if( !timeDependentUpdateHandler.hasUpdateScheduled() ) {
+            if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {
                 val nextUpdateTs = getNextComplicationUpdateDelay()
                 if( nextUpdateTs != null ) {
                     timeDependentUpdateHandler.scheduleUpdate(nextUpdateTs)
