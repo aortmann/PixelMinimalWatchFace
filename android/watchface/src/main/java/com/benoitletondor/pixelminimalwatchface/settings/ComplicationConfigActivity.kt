@@ -27,6 +27,7 @@ import android.support.wearable.phone.PhoneDeviceType
 import android.support.wearable.view.ConfirmationOverlay
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.benoitletondor.pixelminimalwatchface.BuildConfig
 import com.benoitletondor.pixelminimalwatchface.BuildConfig.COMPANION_APP_PLAYSTORE_URL
 import com.benoitletondor.pixelminimalwatchface.Injection
 import com.benoitletondor.pixelminimalwatchface.R
@@ -43,7 +44,7 @@ class ComplicationConfigActivity : Activity() {
         setContentView(R.layout.activity_complication_config)
 
         adapter = ComplicationConfigRecyclerViewAdapter(this, storage, {
-            openAppInStoreOnPhone()
+            openAppOnPhone()
         }, { use24hTimeFormat ->
             storage.setUse24hTimeFormat(use24hTimeFormat)
         }, {
@@ -72,6 +73,42 @@ class ComplicationConfigActivity : Activity() {
             adapter.updatePreviewColors()
         }
     }
+
+    private fun openAppOnPhone() {
+        if ( PhoneDeviceType.getPhoneDeviceType(applicationContext) == PhoneDeviceType.DEVICE_TYPE_ANDROID ) {
+            // Create Remote Intent to open Play Store listing of app on remote device.
+            val intentAndroid = Intent(Intent.ACTION_VIEW)
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+                .setData(Uri.parse("pixelminimalwatchface://open"))
+                .setPackage(BuildConfig.APPLICATION_ID)
+
+            RemoteIntent.startRemoteActivity(
+                applicationContext,
+                intentAndroid,
+                object : ResultReceiver(Handler()) {
+                    override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+                        if (resultCode == RemoteIntent.RESULT_OK) {
+                            ConfirmationOverlay()
+                                .setFinishedAnimationListener {
+                                    finish()
+                                }
+                                .setType(ConfirmationOverlay.OPEN_ON_PHONE_ANIMATION)
+                                .setDuration(3000)
+                                .setMessage(getString(R.string.open_phone_url_android_device))
+                                .showOn(this@ComplicationConfigActivity)
+                        } else {
+                            openAppInStoreOnPhone()
+                        }
+                    }
+                }
+            )
+
+            return
+        }
+
+        openAppInStoreOnPhone()
+    }
+
 
     private fun openAppInStoreOnPhone() {
         when (PhoneDeviceType.getPhoneDeviceType(applicationContext)) {
