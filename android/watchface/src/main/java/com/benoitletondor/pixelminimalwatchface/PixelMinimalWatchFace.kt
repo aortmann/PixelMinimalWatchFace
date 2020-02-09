@@ -296,9 +296,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             )
 
             if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {
-                val nextUpdateTs = getNextComplicationUpdateDelay()
-                if( nextUpdateTs != null ) {
-                    timeDependentUpdateHandler.scheduleUpdate(nextUpdateTs)
+                val nextUpdateDelay = getNextComplicationUpdateDelay()
+                if( nextUpdateDelay != null ) {
+                    timeDependentUpdateHandler.scheduleUpdate(nextUpdateDelay)
                 }
             }
         }
@@ -311,23 +311,23 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 return null
             }
 
-            var leftUpdateTs = Long.MAX_VALUE
+            var leftUpdateDelay = Long.MAX_VALUE
             if( timeDependentLeftText != null ) {
                 val nextTimeLeft = timeDependentLeftText.getNextChangeTime(calendar.timeInMillis)
                 if( nextTimeLeft < Long.MAX_VALUE ) {
-                    leftUpdateTs = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeLeft)
+                    leftUpdateDelay = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeLeft)
                 }
             }
 
-            var rightUpdateTs = Long.MAX_VALUE
+            var rightUpdateDelay = Long.MAX_VALUE
             if( timeDependentRightText != null ) {
                 val nextTimeRight = timeDependentRightText.getNextChangeTime(calendar.timeInMillis)
                 if( nextTimeRight < Long.MAX_VALUE ) {
-                    rightUpdateTs = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeRight)
+                    rightUpdateDelay = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeRight)
                 }
             }
 
-            val min = min(leftUpdateTs, rightUpdateTs)
+            val min = min(leftUpdateDelay, rightUpdateDelay)
             if( min == Long.MAX_VALUE ) {
                 return null
             }
