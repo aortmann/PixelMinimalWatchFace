@@ -80,11 +80,17 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         fun cancelUpdate() {
-            hasUpdateScheduled = false
-            removeMessages(MSG_UPDATE_TIME)
+            if( hasUpdateScheduled ) {
+                hasUpdateScheduled = false
+                removeMessages(MSG_UPDATE_TIME)
+            }
         }
 
         fun scheduleUpdate(delay: Long) {
+            if( hasUpdateScheduled ) {
+                cancelUpdate()
+            }
+
             hasUpdateScheduled = true
             sendEmptyMessageDelayed(MSG_UPDATE_TIME, delay)
         }
@@ -297,9 +303,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         private fun getNextComplicationUpdateDelay(): Long? {
-            var leftUpdateTs = Long.MAX_VALUE
-
             val timeDependentLeftText = timeDependentTexts.get(LEFT_COMPLICATION_ID)
+            val timeDependentRightText = timeDependentTexts.get(RIGHT_COMPLICATION_ID)
+
+            if( timeDependentLeftText == null && timeDependentRightText == null ) {
+                return null
+            }
+
+            var leftUpdateTs = Long.MAX_VALUE
             if( timeDependentLeftText != null ) {
                 val nextTimeLeft = timeDependentLeftText.getNextChangeTime(calendar.timeInMillis)
                 if( nextTimeLeft < Long.MAX_VALUE ) {
@@ -308,8 +319,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
 
             var rightUpdateTs = Long.MAX_VALUE
-
-            val timeDependentRightText = timeDependentTexts.get(RIGHT_COMPLICATION_ID)
             if( timeDependentRightText != null ) {
                 val nextTimeRight = timeDependentRightText.getNextChangeTime(calendar.timeInMillis)
                 if( nextTimeRight < Long.MAX_VALUE ) {
