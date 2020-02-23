@@ -15,16 +15,38 @@
  */
 package com.benoitletondor.pixelminimalwatchfacecompanion.injection
 
+import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.BillingImpl
+import com.benoitletondor.pixelminimalwatchfacecompanion.config.Config
+import com.benoitletondor.pixelminimalwatchfacecompanion.config.ConfigImpl
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.StorageImpl
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.SyncImpl
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import org.koin.dsl.module
+import java.util.concurrent.TimeUnit
+
+private const val REMOTE_CONFIG_FETCH_THROTTLE_DEFAULT_VALUE_HOURS = 1L
 
 val appModule = module {
     single<Billing> { BillingImpl(get(), get()) }
     single<Sync> { SyncImpl(get()) }
     single<Storage> { StorageImpl(get()) }
+    single<Config> {
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(if( BuildConfig.DEBUG ) {
+                0L
+            } else {
+                TimeUnit.HOURS.toSeconds(REMOTE_CONFIG_FETCH_THROTTLE_DEFAULT_VALUE_HOURS)
+            })
+            .build()
+
+        val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
+        firebaseRemoteConfig.setConfigSettingsAsync(configSettings)
+
+        return@single ConfigImpl(firebaseRemoteConfig)
+    }
 }

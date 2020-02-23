@@ -23,18 +23,22 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.SingleLiveEvent
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumCheckStatus
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumPurchaseFlowResult
+import com.benoitletondor.pixelminimalwatchfacecompanion.config.Config
+import com.benoitletondor.pixelminimalwatchfacecompanion.config.getVouchers
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
                     private val sync: Sync,
-                    storage: Storage) : ViewModel(), CoroutineScope by MainScope() {
+                    private val config: Config,
+                    private val storage: Storage) : ViewModel(), CoroutineScope by MainScope() {
     val launchOnboardingEvent = SingleLiveEvent<Unit>()
     val errorSyncingEvent = SingleLiveEvent<Throwable>()
     val errorPayingEvent = SingleLiveEvent<Throwable>()
     val syncSucceedEvent = SingleLiveEvent<Unit>()
     val stateEventStream = MutableLiveData<State>(if( billing.isUserPremium() ) { State.Premium } else { State.Loading })
+    val voucherFlowLaunchEvent = SingleLiveEvent<String>()
 
     private val userPremiumEventObserver: Observer<PremiumCheckStatus> = Observer { premiumCheckStatus ->
         if( (premiumCheckStatus == PremiumCheckStatus.Premium && stateEventStream.value == State.NotPremium) ||
@@ -113,6 +117,18 @@ class MainViewModel(private val billing: Billing,
                 errorPayingEvent.value = t
             }
         }
+    }
+
+    fun onVoucherInput(voucher: String) {
+        val vouchers = config.getVouchers()
+        if( vouchers.contains(voucher) ) {
+            storage.setUserPremium(true)
+            syncState(true)
+
+            return
+        }
+
+        voucherFlowLaunchEvent.value = voucher
     }
 
     sealed class State {

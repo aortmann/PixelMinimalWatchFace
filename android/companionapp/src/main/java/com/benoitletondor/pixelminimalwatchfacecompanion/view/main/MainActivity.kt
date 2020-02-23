@@ -122,6 +122,16 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, OnboardingActivity::class.java))
         })
 
+        viewModel.voucherFlowLaunchEvent.observe(this, Observer { voucher ->
+            if ( !launchRedeemVoucherFlow(voucher) ) {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.iab_purchase_error_title)
+                    .setMessage(R.string.iab_purchase_error_message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        })
+
         main_activity_error_view_retry_button.setOnClickListener {
             viewModel.retryPremiumStatusCheck()
         }
@@ -188,13 +198,7 @@ class MainActivity : AppCompatActivity() {
                     return@setPositiveButton
                 }
 
-                if ( !launchRedeemVoucherFlow(voucher) ) {
-                    AlertDialog.Builder(this)
-                        .setTitle(R.string.iab_purchase_error_title)
-                        .setMessage(R.string.iab_purchase_error_message)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show()
-                }
+                viewModel.onVoucherInput(voucher)
             }
             .setNegativeButton(android.R.string.cancel, null)
 

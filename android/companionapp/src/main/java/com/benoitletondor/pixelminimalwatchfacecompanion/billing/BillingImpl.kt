@@ -77,8 +77,14 @@ class BillingImpl(context: Context,
     private fun setIabStatusAndNotify(status: PremiumCheckStatus) {
         iabStatus = status
 
-        if (status == PremiumCheckStatus.Premium || status == PremiumCheckStatus.NotPremium) {
-            storage.setUserPremium(iabStatus == PremiumCheckStatus.Premium)
+        if ( status == PremiumCheckStatus.Premium ) {
+            storage.setUserPremium(true)
+        }
+
+        // Case if a voucher has been redeemed
+        if( status == PremiumCheckStatus.NotPremium && storage.isUserPremium() ) {
+            userPremiumEventSteamInternal.postValue(PremiumCheckStatus.Premium)
+            return
         }
 
         userPremiumEventSteamInternal.postValue(status)
