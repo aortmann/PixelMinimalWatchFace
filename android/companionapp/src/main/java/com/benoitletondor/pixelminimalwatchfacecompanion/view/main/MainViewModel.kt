@@ -76,10 +76,11 @@ class MainViewModel(private val billing: Billing,
                 if( userPremium ) {
                     syncSucceedEvent.value = Unit
                 }
-                stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
             } catch (t: Throwable) {
                 errorSyncingEvent.value = t
             }
+
+            stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
         }
     }
 
