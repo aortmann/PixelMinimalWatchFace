@@ -17,7 +17,9 @@ I made this Watch Face mainly for my own use: I was looking for a "Google Pixel 
 - Battery efficient
 - Support for complications
 
-This is why I created Pixel Minimal Watch Face, with the secret hope that some folks will also like it.
+This is why I created Pixel Minimal Watch Face, with the secret hope that some folks will also like it. 
+
+Part of this project is inspired by [Cole Gerdemann](https://github.com/CorvetteCole) work, please check his GitHub if you want to know more.
 
 ### Contact
 
