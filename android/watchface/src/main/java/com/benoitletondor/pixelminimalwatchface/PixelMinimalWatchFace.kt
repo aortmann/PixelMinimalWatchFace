@@ -59,10 +59,7 @@ private const val MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS = 1000L
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     override fun onCreateEngine(): Engine {
-        val storage = Injection.storage()
-        storage.init(this)
-
-        return Engine(this, storage)
+        return Engine(this, Injection.storage(this))
     }
 
     private class ComplicationTimeDependentUpdateHandler(private val engine: WeakReference<Engine>,

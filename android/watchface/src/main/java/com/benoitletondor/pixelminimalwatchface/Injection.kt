@@ -15,12 +15,13 @@
  */
 package com.benoitletondor.pixelminimalwatchface
 
+import android.content.Context
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.model.StorageImpl
 
 object Injection {
     private val storage = StorageImpl()
 
-    fun storage(): Storage = storage
+    fun storage(context: Context): Storage = storage.init(context)
     fun watchFaceDrawer(): WatchFaceDrawer = WatchFaceDrawerImpl()
 }

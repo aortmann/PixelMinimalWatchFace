@@ -28,7 +28,6 @@ private const val KEY_INSTALL_TIMESTAMP = "installTS"
 private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
 
 interface Storage {
-    fun init(context: Context)
     fun getComplicationColors(): ComplicationColors
     fun setComplicationColors(complicationColors: ComplicationColors)
     fun isUserPremium(): Boolean
@@ -41,16 +40,24 @@ interface Storage {
 }
 
 class StorageImpl : Storage {
+    private var initialized: Boolean = false
+
     private lateinit var appContext: Context
     private lateinit var sharedPreferences: SharedPreferences
 
-    override fun init(context: Context) {
-        appContext = context.applicationContext
-        sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+    fun init(context: Context): Storage {
+        if( !initialized ) {
+            appContext = context.applicationContext
+            sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-        if( getInstallTimestamp() < 0 ) {
-            sharedPreferences.edit().putLong(KEY_INSTALL_TIMESTAMP, System.currentTimeMillis()).apply()
+            if( getInstallTimestamp() < 0 ) {
+                sharedPreferences.edit().putLong(KEY_INSTALL_TIMESTAMP, System.currentTimeMillis()).apply()
+            }
+
+            initialized = true
         }
+
+        return this
     }
 
     override fun getComplicationColors(): ComplicationColors {

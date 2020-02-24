@@ -31,18 +31,20 @@ import com.benoitletondor.pixelminimalwatchface.BuildConfig
 import com.benoitletondor.pixelminimalwatchface.BuildConfig.COMPANION_APP_PLAYSTORE_URL
 import com.benoitletondor.pixelminimalwatchface.Injection
 import com.benoitletondor.pixelminimalwatchface.R
+import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
 import com.google.android.wearable.intent.RemoteIntent
 import kotlinx.android.synthetic.main.activity_complication_config.*
 
 class ComplicationConfigActivity : Activity() {
     private lateinit var adapter: ComplicationConfigRecyclerViewAdapter
-    private val storage = Injection.storage()
+    private lateinit var storage: Storage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_complication_config)
 
+        storage = Injection.storage(this)
         adapter = ComplicationConfigRecyclerViewAdapter(this, storage, {
             openAppOnPhone()
         }, { use24hTimeFormat ->
