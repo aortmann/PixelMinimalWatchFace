@@ -31,7 +31,7 @@ class ColorSelectionActivity : Activity() {
 
         val availableColors = ComplicationColorsProvider.getAllComplicationColors(this)
         val adapter = ColorSelectionRecyclerViewAdapter(availableColors) { selectedColor ->
-            Injection.storage().setComplicationColors(selectedColor)
+            Injection.storage(this).setComplicationColors(selectedColor)
 
             setResult(RESULT_OK)
             finish()
