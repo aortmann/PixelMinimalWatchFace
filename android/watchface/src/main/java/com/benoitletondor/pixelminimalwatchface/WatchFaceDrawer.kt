@@ -278,8 +278,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             }
         }
 
-        val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
-        canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, wearOSLogoPaint)
+        if( storage.shouldShowWearOSLogo() ) {
+            val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
+            canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, wearOSLogoPaint)
+        }
     }
 
     private fun drawBackground(canvas: Canvas) {

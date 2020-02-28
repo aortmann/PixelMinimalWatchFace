@@ -47,13 +47,15 @@ private const val TYPE_FOOTER = 3
 private const val TYPE_BECOME_PREMIUM = 4
 private const val TYPE_HOUR_FORMAT = 5
 private const val TYPE_SEND_FEEDBACK = 6
+private const val TYPE_SHOW_WEAROS_LOGO = 7
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
     private val premiumClickListener: () -> Unit,
     private val hourFormatSelectionListener: (Boolean) -> Unit,
-    private val onFeedbackButtonPressed: () -> Unit
+    private val onFeedbackButtonPressed: () -> Unit,
+    private val showWearOSButtonListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -132,6 +134,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 onFeedbackButtonPressed
             )
+            TYPE_SHOW_WEAROS_LOGO -> return ShowWearOSLogoViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_wearos_logo,
+                    parent,
+                    false
+                ),
+                showWearOSButtonListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -147,6 +157,12 @@ class ComplicationConfigRecyclerViewAdapter(
             TYPE_HOUR_FORMAT -> {
                 val use24hTimeFormat = storage.getUse24hTimeFormat()
                 (viewHolder as HourFormatViewHolder).setHourFormatSwitchChecked(use24hTimeFormat)
+            }
+            TYPE_SHOW_WEAROS_LOGO -> {
+                (viewHolder as ShowWearOSLogoViewHolder).apply {
+                    setShowWearOSLogoSwitchChecked(storage.shouldShowWearOSLogo())
+                    setPremiumTitle(storage.isUserPremium())
+                }
             }
         }
     }
@@ -176,16 +192,18 @@ class ComplicationConfigRecyclerViewAdapter(
                 0 -> TYPE_HEADER
                 1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
                 2 -> TYPE_COLOR_CONFIG
-                3 -> TYPE_HOUR_FORMAT
-                4 -> TYPE_SEND_FEEDBACK
+                3 -> TYPE_SHOW_WEAROS_LOGO
+                4 -> TYPE_HOUR_FORMAT
+                5 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
             when (position) {
                 0 -> TYPE_HEADER
                 1 -> TYPE_BECOME_PREMIUM
-                2 -> TYPE_HOUR_FORMAT
-                3 -> TYPE_SEND_FEEDBACK
+                2 -> TYPE_SHOW_WEAROS_LOGO
+                3 -> TYPE_HOUR_FORMAT
+                4 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -194,9 +212,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            6
+            7
         } else {
-            5
+            6
         }
     }
 
@@ -368,6 +386,29 @@ class HourFormatViewHolder(view: View,
 
     fun setHourFormatSwitchChecked(checked: Boolean) {
         hourFormatSwitch.isChecked = checked
+    }
+}
+
+class ShowWearOSLogoViewHolder(view: View,
+                               showWearOSLogoClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val wearOSLogoSwitch: Switch = view as Switch
+
+    init {
+        wearOSLogoSwitch.setOnCheckedChangeListener { _, checked ->
+            showWearOSLogoClickListener(checked)
+        }
+    }
+
+    fun setShowWearOSLogoSwitchChecked(checked: Boolean) {
+        wearOSLogoSwitch.isChecked = checked
+    }
+
+    fun setPremiumTitle(userPremium: Boolean) {
+        wearOSLogoSwitch.text = itemView.context.getString(if( userPremium ) {
+            R.string.config_show_wear_os_logo_premium
+        } else {
+            R.string.config_show_wear_os_logo
+        })
     }
 }
 

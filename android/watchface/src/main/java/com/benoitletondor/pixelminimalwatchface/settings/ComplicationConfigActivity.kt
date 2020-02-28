@@ -52,6 +52,8 @@ class ComplicationConfigActivity : Activity() {
         }, {
             storage.setRatingDisplayed(true)
             startActivity(Intent(this, FeedbackActivity::class.java))
+        }, { showWearOSLogo ->
+            storage.setShouldShowWearOSLogo(showWearOSLogo)
         })
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true
