@@ -26,6 +26,7 @@ private const val KEY_USER_PREMIUM = "user_premium"
 private const val KEY_USE_24H_TIME_FORMAT = "use24hTimeFormat"
 private const val KEY_INSTALL_TIMESTAMP = "installTS"
 private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
+private const val KEY_APP_VERSION = "appVersion"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -37,6 +38,8 @@ interface Storage {
     fun getInstallTimestamp(): Long
     fun hasRatingBeenDisplayed(): Boolean
     fun setRatingDisplayed(sent: Boolean)
+    fun getAppVersion(): Int
+    fun setAppVersion(version: Int)
 }
 
 class StorageImpl : Storage {
@@ -113,5 +116,13 @@ class StorageImpl : Storage {
 
     override fun setRatingDisplayed(sent: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_RATING_NOTIFICATION_SENT, sent).apply()
+    }
+
+    override fun getAppVersion(): Int {
+        return sharedPreferences.getInt(KEY_APP_VERSION, -1)
+    }
+
+    override fun setAppVersion(version: Int) {
+        sharedPreferences.edit().putInt(KEY_APP_VERSION, version).apply()
     }
 }
