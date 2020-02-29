@@ -76,6 +76,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var wearOSLogo: Bitmap
     private lateinit var wearOSLogoAmbient: Bitmap
     private lateinit var productSansRegularFont: Typeface
+    private var titleSize: Int = 0
+    private var textSize: Int = 0
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
 
@@ -95,6 +97,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         productSansRegularFont = ResourcesCompat.getFont(context, R.font.product_sans_regular)!!
         timeFormatter24H = SimpleDateFormat("HH:mm", Locale.getDefault())
         timeFormatter12H = SimpleDateFormat("h:mm", Locale.getDefault())
+        titleSize = context.resources.getDimensionPixelSize(R.dimen.complication_title_size)
+        textSize = context.resources.getDimensionPixelSize(R.dimen.complication_text_size)
         timePaint = Paint().apply {
             typeface = productSansRegularFont
             strokeWidth = 1.5f
@@ -139,6 +143,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
             val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
 
+            complicationDrawable.setTitleSizeActive(titleSize)
+            complicationDrawable.setTitleSizeAmbient(titleSize)
             complicationDrawable.setTitleColorActive(complicationTitleColor)
             complicationDrawable.setTitleColorAmbient(complicationTitleColor)
             complicationDrawable.setIconColorActive(primaryComplicationColor)
@@ -160,9 +166,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
             complicationDrawable.setTextColorAmbient(complicationTitleColor)
+            complicationDrawable.setTextSizeActive(titleSize)
+            complicationDrawable.setTextSizeAmbient(titleSize)
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
             complicationDrawable.setTextColorAmbient(dateColorDimmed)
+            complicationDrawable.setTextSizeActive(textSize)
+            complicationDrawable.setTextSizeAmbient(textSize)
         }
     }
 
