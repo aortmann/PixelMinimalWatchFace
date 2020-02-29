@@ -23,15 +23,13 @@ import com.benoitletondor.pixelminimalwatchface.R
 object ComplicationColorsProvider {
 
     fun getDefaultComplicationColors(context: Context): ComplicationColors {
-        val leftColor = ContextCompat.getColor(context,
-            R.color.complication_default_left_color
-        )
-        val rightColor = ContextCompat.getColor(context,
-            R.color.complication_default_right_color
-        )
+        val leftColor = ContextCompat.getColor(context, R.color.complication_default_left_color)
+        val middleColor = ContextCompat.getColor(context, R.color.complication_default_middle_color)
+        val rightColor = ContextCompat.getColor(context, R.color.complication_default_right_color)
 
         return ComplicationColors(
             leftColor,
+            middleColor,
             rightColor,
             context.getString(R.string.color_default),
             true

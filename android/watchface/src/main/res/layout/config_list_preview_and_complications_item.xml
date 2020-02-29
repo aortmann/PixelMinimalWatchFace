@@ -35,14 +35,14 @@
 
     <ImageView
         android:id="@+id/left_complication_background"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:src="@drawable/added_complication"
         android:background="@android:color/transparent"
         android:layout_marginTop="10dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginEnd="5dp"
         android:scaleType="centerCrop"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/middle_complication_background"
         app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton
@@ -59,15 +59,52 @@
         app:layout_constraintBottom_toBottomOf="@+id/left_complication_background"/>
 
     <ImageView
-        android:id="@+id/right_complication_background"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:id="@+id/middle_complication_background"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:src="@drawable/added_complication"
         android:background="@android:color/transparent"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="16dp"
         android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
+
+    <ImageButton
+        android:id="@+id/middle_complication"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        style="?android:borderlessButtonStyle"
+        android:background="@android:color/transparent"
+        android:padding="10dp"
+        android:scaleType="centerInside"
+        app:layout_constraintStart_toStartOf="@+id/middle_complication_background"
+        app:layout_constraintEnd_toEndOf="@+id/middle_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/middle_complication_background"
+        app:layout_constraintBottom_toBottomOf="@+id/middle_complication_background"/>
+
+    <ImageView
+        android:id="@+id/wear_os_logo_image_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerInside"
+        android:padding="5dp"
+        android:src="@drawable/ic_wear_os_logo"
+        app:layout_constraintStart_toStartOf="@+id/middle_complication_background"
+        app:layout_constraintEnd_toEndOf="@+id/middle_complication_background"
+        app:layout_constraintTop_toTopOf="@+id/middle_complication_background"
+        app:layout_constraintBottom_toBottomOf="@+id/middle_complication_background"/>
+
+    <ImageView
+        android:id="@+id/right_complication_background"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/added_complication"
+        android:background="@android:color/transparent"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="5dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toEndOf="@+id/middle_complication_background"
         app:layout_constraintTop_toBottomOf="@+id/complication_configuration_text_view"/>
 
     <ImageButton

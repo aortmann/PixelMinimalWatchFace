@@ -18,11 +18,12 @@ package com.benoitletondor.pixelminimalwatchface.model
 import androidx.annotation.ColorInt
 
 data class ComplicationColors(@ColorInt val leftColor: Int,
+                              @ColorInt val middleColor: Int,
                               @ColorInt val rightColor: Int,
                               val label: String,
                               val isDefault: Boolean) {
 
-    constructor(@ColorInt color: Int, label: String) : this(color, color, label,false)
+    constructor(@ColorInt color: Int, label: String) : this(color, color, color, label,false)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -31,6 +32,7 @@ data class ComplicationColors(@ColorInt val leftColor: Int,
         other as ComplicationColors
 
         if (leftColor != other.leftColor) return false
+        if (middleColor != other.middleColor) return false
         if (rightColor != other.rightColor) return false
 
         return true
@@ -38,6 +40,7 @@ data class ComplicationColors(@ColorInt val leftColor: Int,
 
     override fun hashCode(): Int {
         var result = leftColor
+        result = 31 * result + middleColor
         result = 31 * result + rightColor
         return result
     }

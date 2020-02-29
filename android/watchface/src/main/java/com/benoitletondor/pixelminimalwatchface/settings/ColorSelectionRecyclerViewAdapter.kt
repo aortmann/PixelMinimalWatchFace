@@ -48,6 +48,7 @@ class ColorSelectionRecyclerViewAdapter(
 
 class ColorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val leftColorView: View = view.findViewById(R.id.colorLeft)
+    private val middleColorView: View = view.findViewById(R.id.colorMiddle)
     private val rightColorView: View = view.findViewById(R.id.colorRight)
     private val colorsContainer: ViewGroup = view.findViewById(R.id.color_config_list_item_colors_container)
     private val colorLabelTextView: TextView = view.findViewById(R.id.color_config_list_item_color_label)
@@ -59,6 +60,7 @@ class ColorViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     fun setItem(item: ComplicationColors,
                 onClickListener: () -> Unit) {
         leftColorView.setBackgroundColor(item.leftColor)
+        middleColorView.setBackgroundColor(item.middleColor)
         rightColorView.setBackgroundColor(item.rightColor)
         colorLabelTextView.text = item.label
 

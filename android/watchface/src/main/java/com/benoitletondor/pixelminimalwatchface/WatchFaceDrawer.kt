@@ -27,6 +27,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
+import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
@@ -133,11 +134,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
     override fun onComplicationColorsUpdate(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>) {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
-            val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
-                complicationColors.leftColor
-            } else {
-                complicationColors.rightColor
-            }
+            val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
 
             complicationDrawable.setTitleColorActive(complicationTitleColor)
             complicationDrawable.setIconColorActive(primaryComplicationColor)
@@ -152,16 +149,20 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                           complicationDrawable: ComplicationDrawable,
                                           data: ComplicationData?,
                                           complicationColors: ComplicationColors) {
-        val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
-            complicationColors.leftColor
-        } else {
-            complicationColors.rightColor
-        }
-
+        val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
+        }
+    }
+
+    @ColorInt
+    private fun getComplicationPrimaryColor(complicationId: Int, complicationColors: ComplicationColors): Int {
+        return when (complicationId) {
+            LEFT_COMPLICATION_ID -> { complicationColors.leftColor }
+            MIDDLE_COMPLICATION_ID -> { complicationColors.middleColor }
+            else -> { complicationColors.rightColor }
         }
     }
 
@@ -229,6 +230,17 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             leftComplicationDrawable.bounds = leftBounds
         }
 
+        val middleBounds = Rect(
+            (centerX - (sizeOfComplication / 2)).toInt(),
+            leftBounds.top,
+            (centerX + (sizeOfComplication / 2)).toInt(),
+            leftBounds.bottom
+        )
+
+        complicationsDrawable[MIDDLE_COMPLICATION_ID]?.let { middleComplicationDrawable ->
+            middleComplicationDrawable.bounds = middleBounds
+        }
+
         val rightBounds = Rect(
             (centerX + (wearOsImage.width / 2) + 15f).toInt(),
             verticalOffset,
@@ -273,8 +285,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
     private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
         if( !ambient && isUserPremium ) {
-            complicationsDrawable.values.forEach { complicationDrawable ->
-                complicationDrawable.draw(canvas, currentTime.time)
+            complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
+                if( complicationId != MIDDLE_COMPLICATION_ID || !storage.shouldShowWearOSLogo() ) {
+                    complicationDrawable.draw(canvas, currentTime.time)
+                }
             }
         }
 

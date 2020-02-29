@@ -62,7 +62,7 @@ class ComplicationConfigRecyclerViewAdapter(
 
     private val watchFaceComponentName = ComponentName(context, PixelMinimalWatchFace::class.java)
     private val providerInfoRetriever = ProviderInfoRetriever(context, Executors.newCachedThreadPool())
-    private lateinit var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder
+    private var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -74,7 +74,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 )
             )
             TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG -> {
-                previewAndComplicationsViewHolder =
+                val previewAndComplicationsViewHolder =
                     PreviewAndComplicationsViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.config_list_preview_and_complications_item, parent, false)) { location ->
                         selectedComplicationLocation = location
 
@@ -94,6 +94,7 @@ class ComplicationConfigRecyclerViewAdapter(
                         }
                     }
 
+                this.previewAndComplicationsViewHolder = previewAndComplicationsViewHolder
                 return previewAndComplicationsViewHolder
             }
             TYPE_COLOR_CONFIG -> return ColorPickerViewHolder(
@@ -139,9 +140,10 @@ class ComplicationConfigRecyclerViewAdapter(
                     R.layout.config_list_show_wearos_logo,
                     parent,
                     false
-                ),
-                showWearOSButtonListener
-            )
+                )) { showWearOSLogo ->
+                    showWearOSButtonListener(showWearOSLogo)
+                    previewAndComplicationsViewHolder?.showMiddleComplication(!showWearOSLogo)
+                }
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -152,6 +154,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 val previewAndComplicationsViewHolder = viewHolder as PreviewAndComplicationsViewHolder
 
                 previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
+                previewAndComplicationsViewHolder.showMiddleComplication(!storage.shouldShowWearOSLogo())
                 initializesColorsAndComplications()
             }
             TYPE_HOUR_FORMAT -> {
@@ -174,8 +177,12 @@ class ComplicationConfigRecyclerViewAdapter(
             object : OnProviderInfoReceivedCallback() {
                 override fun onProviderInfoReceived(watchFaceComplicationId: Int, complicationProviderInfo: ComplicationProviderInfo?) {
 
-                    previewAndComplicationsViewHolder.updateComplicationViews(
-                        if (watchFaceComplicationId == getComplicationId(ComplicationLocation.LEFT)) ComplicationLocation.LEFT else ComplicationLocation.RIGHT,
+                    previewAndComplicationsViewHolder?.updateComplicationViews(
+                        when (watchFaceComplicationId) {
+                            getComplicationId(ComplicationLocation.LEFT) -> { ComplicationLocation.LEFT }
+                            getComplicationId(ComplicationLocation.MIDDLE) -> { ComplicationLocation.MIDDLE }
+                            else -> { ComplicationLocation.RIGHT }
+                        },
                         complicationProviderInfo,
                         storage.getComplicationColors()
                     )
@@ -223,7 +230,7 @@ class ComplicationConfigRecyclerViewAdapter(
         val selectedComplicationLocation = selectedComplicationLocation
 
         if ( selectedComplicationLocation != null ) {
-            previewAndComplicationsViewHolder.updateComplicationViews(
+            previewAndComplicationsViewHolder?.updateComplicationViews(
                 selectedComplicationLocation,
                 complicationProviderInfo,
                 storage.getComplicationColors()
@@ -248,12 +255,12 @@ class ComplicationConfigRecyclerViewAdapter(
     }
 
     fun updatePreviewColors() {
-        previewAndComplicationsViewHolder.updateComplicationsAccentColor(storage.getComplicationColors())
+        previewAndComplicationsViewHolder?.updateComplicationsAccentColor(storage.getComplicationColors())
     }
 }
 
 enum class ComplicationLocation {
-    LEFT, RIGHT
+    LEFT, MIDDLE, RIGHT
 }
 
 class ColorPickerViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
@@ -277,49 +284,70 @@ class PreviewAndComplicationsViewHolder(
     view: View,
     private val listener: (location: ComplicationLocation) -> Unit
 ) : RecyclerView.ViewHolder(view), View.OnClickListener {
-
+    private val wearOSLogoImageView: ImageView = view.findViewById(R.id.wear_os_logo_image_view)
     private val leftComplicationBackground: ImageView = view.findViewById(R.id.left_complication_background)
+    private val middleComplicationBackground: ImageView = view.findViewById(R.id.middle_complication_background)
     private val rightComplicationBackground: ImageView = view.findViewById(R.id.right_complication_background)
     private val leftComplication: ImageButton = view.findViewById(R.id.left_complication)
+    private val middleComplication: ImageButton = view.findViewById(R.id.middle_complication)
     private val rightComplication: ImageButton = view.findViewById(R.id.right_complication)
     private var addComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
     private var addedComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.added_complication)!!
 
     init {
         leftComplication.setOnClickListener(this)
+        middleComplication.setOnClickListener(this)
         rightComplication.setOnClickListener(this)
     }
 
     fun setDefaultComplicationDrawable() {
         leftComplication.setImageDrawable(addComplicationDrawable)
+        middleComplication.setImageDrawable(addComplicationDrawable)
         rightComplication.setImageDrawable(addComplicationDrawable)
     }
 
     override fun onClick(view: View) {
-        if (view == leftComplication) {
-            listener(ComplicationLocation.LEFT)
-        } else if (view == rightComplication) {
-            listener(ComplicationLocation.RIGHT)
+        when (view) {
+            leftComplication -> { listener(ComplicationLocation.LEFT) }
+            middleComplication -> { listener(ComplicationLocation.MIDDLE) }
+            rightComplication -> { listener(ComplicationLocation.RIGHT) }
         }
+    }
+
+    fun showMiddleComplication(showMiddleComplication: Boolean) {
+        middleComplication.visibility = if( showMiddleComplication ) { View.VISIBLE } else { View.GONE }
+        middleComplicationBackground.visibility = if( showMiddleComplication ) { View.VISIBLE } else { View.INVISIBLE }
+        wearOSLogoImageView.visibility = if( !showMiddleComplication ) { View.VISIBLE } else { View.GONE }
     }
 
     fun updateComplicationViews(location: ComplicationLocation,
                                 complicationProviderInfo: ComplicationProviderInfo?,
                                 complicationColors: ComplicationColors) {
-        if (location == ComplicationLocation.LEFT) {
-            updateComplicationView(
-                complicationProviderInfo,
-                leftComplication,
-                leftComplicationBackground,
-                complicationColors
-            )
-        } else if (location == ComplicationLocation.RIGHT) {
-            updateComplicationView(
-                complicationProviderInfo,
-                rightComplication,
-                rightComplicationBackground,
-                complicationColors
-            )
+        when (location) {
+            ComplicationLocation.LEFT -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    leftComplication,
+                    leftComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.MIDDLE -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    middleComplication,
+                    middleComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.RIGHT -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    rightComplication,
+                    rightComplicationBackground,
+                    complicationColors
+                )
+            }
         }
     }
 
@@ -349,6 +377,12 @@ class PreviewAndComplicationsViewHolder(
             leftComplication.setColorFilter(Color.WHITE)
         } else {
             leftComplication.setColorFilter(colors.leftColor)
+        }
+
+        if( middleComplication.drawable == addComplicationDrawable ) {
+            middleComplication.setColorFilter(Color.WHITE)
+        } else {
+            middleComplication.setColorFilter(colors.middleColor)
         }
     }
 }

@@ -23,6 +23,7 @@
     <color name="config_footer_color">#CCC</color>
 
     <color name="complication_default_left_color">#5484f8</color>
+    <color name="complication_default_middle_color">#F2BD00</color>
     <color name="complication_default_right_color">#da482f</color>
     <color name="complication_title_color">#AAA</color>
 </resources>
