@@ -28,7 +28,7 @@ android {
         applicationId "com.benoitletondor.pixelminimalwatchface"
         minSdkVersion 25
         targetSdkVersion 29
-        versionCode 11
+        versionCode 12
         versionName "1.1.0"
         multiDexEnabled true
 
