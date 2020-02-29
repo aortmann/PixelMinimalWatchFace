@@ -43,7 +43,7 @@
     <string name="copyright">Version %s. Made by Benoit Letondor</string>
     <string name="feedback_email" translatable="false">pixelwatchface@benoitletondor.com</string>
     <string name="feedback_send_subject" translatable="false">Pixel Watch Face - Feedback</string>
-    <string name="premium_1_title">2 configurable widgets, beautifully integrated</string>
+    <string name="premium_1_title">3 customisable widgets, beautifully integrated</string>
     <string name="premium_2_title">Choose the widgets you want</string>
     <string name="premium_3_title">Pick the widgets accent color</string>
     <string name="sync_succeed_message">Sync done! Check your watch.</string>
