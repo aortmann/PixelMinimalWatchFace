@@ -34,6 +34,7 @@ import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.max
 
 interface WatchFaceDrawer {
     fun onCreate(context: Context, storage: Storage)
@@ -225,10 +226,12 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val sizeOfComplication = (screenWidth / 4.5).toInt()
         val verticalOffset = bottomY.toInt() - sizeOfComplication
 
+        val maxWidth = max(sizeOfComplication, wearOsImage.width)
+
         val leftBounds = Rect(
-            (centerX - (wearOsImage.width / 2) - 15f - sizeOfComplication).toInt(),
+            (centerX - (maxWidth / 2) - 15f - sizeOfComplication).toInt(),
             verticalOffset,
-            (centerX - (wearOsImage.width / 2)  - 15f).toInt(),
+            (centerX - (maxWidth / 2)  - 15f).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
@@ -238,9 +241,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val middleBounds = Rect(
             (centerX - (sizeOfComplication / 2)).toInt(),
-            leftBounds.top,
+            verticalOffset,
             (centerX + (sizeOfComplication / 2)).toInt(),
-            leftBounds.bottom
+            (verticalOffset + sizeOfComplication)
         )
 
         complicationsDrawable[MIDDLE_COMPLICATION_ID]?.let { middleComplicationDrawable ->
@@ -248,9 +251,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
 
         val rightBounds = Rect(
-            (centerX + (wearOsImage.width / 2) + 15f).toInt(),
+            (centerX + (maxWidth / 2) + 15f).toInt(),
             verticalOffset,
-            (centerX + (wearOsImage.width / 2)  + 15f + sizeOfComplication).toInt(),
+            (centerX + (maxWidth / 2)  + 15f + sizeOfComplication).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
