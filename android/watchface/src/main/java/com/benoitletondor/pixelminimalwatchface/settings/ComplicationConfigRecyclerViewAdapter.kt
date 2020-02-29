@@ -47,7 +47,8 @@ private const val TYPE_FOOTER = 3
 private const val TYPE_BECOME_PREMIUM = 4
 private const val TYPE_HOUR_FORMAT = 5
 private const val TYPE_SEND_FEEDBACK = 6
-private const val TYPE_SHOW_WEAROS_LOGO = 7
+private const val TYPE_SHOW_WEAR_OS_LOGO = 7
+private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -55,7 +56,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val premiumClickListener: () -> Unit,
     private val hourFormatSelectionListener: (Boolean) -> Unit,
     private val onFeedbackButtonPressed: () -> Unit,
-    private val showWearOSButtonListener: (Boolean) -> Unit
+    private val showWearOSButtonListener: (Boolean) -> Unit,
+    private val showComplicationsAmbientListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -135,7 +137,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 onFeedbackButtonPressed
             )
-            TYPE_SHOW_WEAROS_LOGO -> return ShowWearOSLogoViewHolder(
+            TYPE_SHOW_WEAR_OS_LOGO -> return ShowWearOSLogoViewHolder(
                 LayoutInflater.from(parent.context).inflate(
                     R.layout.config_list_show_wearos_logo,
                     parent,
@@ -144,6 +146,14 @@ class ComplicationConfigRecyclerViewAdapter(
                     showWearOSButtonListener(showWearOSLogo)
                     previewAndComplicationsViewHolder?.showMiddleComplication(!showWearOSLogo)
                 }
+            TYPE_SHOW_COMPLICATIONS_AMBIENT -> return ShowComplicationsAmbientViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_complications_ambient,
+                    parent,
+                    false
+                ),
+                showComplicationsAmbientListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -161,11 +171,15 @@ class ComplicationConfigRecyclerViewAdapter(
                 val use24hTimeFormat = storage.getUse24hTimeFormat()
                 (viewHolder as HourFormatViewHolder).setHourFormatSwitchChecked(use24hTimeFormat)
             }
-            TYPE_SHOW_WEAROS_LOGO -> {
+            TYPE_SHOW_WEAR_OS_LOGO -> {
                 (viewHolder as ShowWearOSLogoViewHolder).apply {
                     setShowWearOSLogoSwitchChecked(storage.shouldShowWearOSLogo())
                     setPremiumTitle(storage.isUserPremium())
                 }
+            }
+            TYPE_SHOW_COMPLICATIONS_AMBIENT -> {
+                val showComplicationsAmbient = storage.shouldShowComplicationsInAmbientMode()
+                (viewHolder as ShowComplicationsAmbientViewHolder).setShowComplicationsAmbientSwitchChecked(showComplicationsAmbient)
             }
         }
     }
@@ -199,16 +213,17 @@ class ComplicationConfigRecyclerViewAdapter(
                 0 -> TYPE_HEADER
                 1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
                 2 -> TYPE_COLOR_CONFIG
-                3 -> TYPE_SHOW_WEAROS_LOGO
-                4 -> TYPE_HOUR_FORMAT
-                5 -> TYPE_SEND_FEEDBACK
+                3 -> TYPE_SHOW_WEAR_OS_LOGO
+                4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
+                5 -> TYPE_HOUR_FORMAT
+                6 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
             when (position) {
                 0 -> TYPE_HEADER
                 1 -> TYPE_BECOME_PREMIUM
-                2 -> TYPE_SHOW_WEAROS_LOGO
+                2 -> TYPE_SHOW_WEAR_OS_LOGO
                 3 -> TYPE_HOUR_FORMAT
                 4 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
@@ -219,7 +234,7 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            7
+            8
         } else {
             6
         }
@@ -452,5 +467,20 @@ class SendFeedbackViewHolder(view: View,
         view.setOnClickListener {
             onFeedbackButtonPressed()
         }
+    }
+}
+
+class ShowComplicationsAmbientViewHolder(view: View,
+                                         showComplicationsAmbientClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showComplicationsAmbientSwitch: Switch = view as Switch
+
+    init {
+        showComplicationsAmbientSwitch.setOnCheckedChangeListener { _, checked ->
+            showComplicationsAmbientClickListener(checked)
+        }
+    }
+
+    fun setShowComplicationsAmbientSwitchChecked(checked: Boolean) {
+        showComplicationsAmbientSwitch.isChecked = checked
     }
 }

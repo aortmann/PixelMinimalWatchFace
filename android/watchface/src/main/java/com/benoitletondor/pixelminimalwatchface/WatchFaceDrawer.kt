@@ -137,9 +137,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
 
             complicationDrawable.setTitleColorActive(complicationTitleColor)
+            complicationDrawable.setTitleColorAmbient(complicationTitleColor)
             complicationDrawable.setIconColorActive(primaryComplicationColor)
+            complicationDrawable.setIconColorAmbient(dateColorDimmed)
             complicationDrawable.setTextTypefaceActive(productSansRegularFont)
             complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
+            complicationDrawable.setTextTypefaceAmbient(productSansRegularFont)
+            complicationDrawable.setTitleTypefaceAmbient(productSansRegularFont)
 
             onComplicationDataUpdate(complicationId, complicationDrawable, complicationsData.get(complicationId), complicationColors)
         }
@@ -152,8 +156,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
+            complicationDrawable.setTextColorAmbient(complicationTitleColor)
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
+            complicationDrawable.setTextColorAmbient(dateColorDimmed)
         }
     }
 
@@ -284,7 +290,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     }
 
     private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
-        if( !ambient && isUserPremium ) {
+        if( isUserPremium && (storage.shouldShowComplicationsInAmbientMode() || !ambient) ) {
             complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
                 if( complicationId != MIDDLE_COMPLICATION_ID || !storage.shouldShowWearOSLogo() ) {
                     complicationDrawable.draw(canvas, currentTime.time)

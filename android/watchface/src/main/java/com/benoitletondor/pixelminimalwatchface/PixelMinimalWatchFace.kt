@@ -280,7 +280,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             timeDependentUpdateHandler.cancelUpdate()
 
-            if( !ambient ) {
+            if( !ambient || storage.shouldShowComplicationsInAmbientMode() ) {
                 invalidate()
             }
         }
@@ -407,7 +407,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         override fun invalidateDrawable(who: Drawable) {
-            if( !ambient ) {
+            if( !ambient || storage.shouldShowComplicationsInAmbientMode() ) {
                 invalidate()
             }
         }

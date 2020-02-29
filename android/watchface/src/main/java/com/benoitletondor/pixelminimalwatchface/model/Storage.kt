@@ -28,6 +28,7 @@ private const val KEY_INSTALL_TIMESTAMP = "installTS"
 private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
 private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
+private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -43,6 +44,8 @@ interface Storage {
     fun setAppVersion(version: Int)
     fun shouldShowWearOSLogo(): Boolean
     fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean)
+    fun shouldShowComplicationsInAmbientMode(): Boolean
+    fun setShouldShowComplicationsInAmbientMode(show: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -136,5 +139,13 @@ class StorageImpl : Storage {
 
     override fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_SHOW_WEAR_OS_LOGO, shouldShowWearOSLogo).apply()
+    }
+
+    override fun shouldShowComplicationsInAmbientMode(): Boolean {
+        return sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+    }
+
+    override fun setShouldShowComplicationsInAmbientMode(show: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, show).apply()
     }
 }
