@@ -21,6 +21,7 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
+import android.util.DisplayMetrics
 import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
@@ -35,6 +36,7 @@ import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 interface WatchFaceDrawer {
     fun onCreate(context: Context, storage: Storage)
@@ -225,13 +227,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val sizeOfComplication = (screenWidth / 4.5).toInt()
         val verticalOffset = bottomY.toInt() - sizeOfComplication
+        val distanceBetweenComplications = context.dpToPx(3)
 
         val maxWidth = max(sizeOfComplication, wearOsImage.width)
 
         val leftBounds = Rect(
-            (centerX - (maxWidth / 2) - 15f - sizeOfComplication).toInt(),
+            (centerX - (maxWidth / 2) - distanceBetweenComplications - sizeOfComplication).toInt(),
             verticalOffset,
-            (centerX - (maxWidth / 2)  - 15f).toInt(),
+            (centerX - (maxWidth / 2)  - distanceBetweenComplications).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
@@ -251,9 +254,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
 
         val rightBounds = Rect(
-            (centerX + (maxWidth / 2) + 15f).toInt(),
+            (centerX + (maxWidth / 2) + distanceBetweenComplications).toInt(),
             verticalOffset,
-            (centerX + (maxWidth / 2)  + 15f + sizeOfComplication).toInt(),
+            (centerX + (maxWidth / 2)  + distanceBetweenComplications + sizeOfComplication).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
@@ -327,6 +330,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             isAntiAlias = !(ambient && lowBitAmbient)
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
+    }
+
+    private fun Context.dpToPx(dp: Int): Int {
+        val displayMetrics = resources.displayMetrics
+        return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
     }
 
 }
