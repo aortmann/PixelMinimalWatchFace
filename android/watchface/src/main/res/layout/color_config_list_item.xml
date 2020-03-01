@@ -31,12 +31,17 @@
 
         <View
             android:id="@+id/colorLeft"
-            android:layout_width="20dp"
+            android:layout_width="14dp"
+            android:layout_height="40dp" />
+
+        <View
+            android:id="@+id/colorMiddle"
+            android:layout_width="12dp"
             android:layout_height="40dp" />
 
         <View
             android:id="@+id/colorRight"
-            android:layout_width="20dp"
+            android:layout_width="14dp"
             android:layout_height="40dp" />
 
     </LinearLayout>

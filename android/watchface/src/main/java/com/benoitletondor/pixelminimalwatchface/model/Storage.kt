@@ -26,6 +26,9 @@ private const val KEY_USER_PREMIUM = "user_premium"
 private const val KEY_USE_24H_TIME_FORMAT = "use24hTimeFormat"
 private const val KEY_INSTALL_TIMESTAMP = "installTS"
 private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
+private const val KEY_APP_VERSION = "appVersion"
+private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
+private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -37,6 +40,12 @@ interface Storage {
     fun getInstallTimestamp(): Long
     fun hasRatingBeenDisplayed(): Boolean
     fun setRatingDisplayed(sent: Boolean)
+    fun getAppVersion(): Int
+    fun setAppVersion(version: Int)
+    fun shouldShowWearOSLogo(): Boolean
+    fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean)
+    fun shouldShowComplicationsInAmbientMode(): Boolean
+    fun setShouldShowComplicationsInAmbientMode(show: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -71,6 +80,7 @@ class StorageImpl : Storage {
         }
 
         return ComplicationColors(
+            color,
             color,
             color,
             "TODO", // FIXME
@@ -113,5 +123,29 @@ class StorageImpl : Storage {
 
     override fun setRatingDisplayed(sent: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_RATING_NOTIFICATION_SENT, sent).apply()
+    }
+
+    override fun getAppVersion(): Int {
+        return sharedPreferences.getInt(KEY_APP_VERSION, -1)
+    }
+
+    override fun setAppVersion(version: Int) {
+        sharedPreferences.edit().putInt(KEY_APP_VERSION, version).apply()
+    }
+
+    override fun shouldShowWearOSLogo(): Boolean {
+        return sharedPreferences.getBoolean(KEY_SHOW_WEAR_OS_LOGO, true)
+    }
+
+    override fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_SHOW_WEAR_OS_LOGO, shouldShowWearOSLogo).apply()
+    }
+
+    override fun shouldShowComplicationsInAmbientMode(): Boolean {
+        return sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+    }
+
+    override fun setShouldShowComplicationsInAmbientMode(show: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, show).apply()
     }
 }

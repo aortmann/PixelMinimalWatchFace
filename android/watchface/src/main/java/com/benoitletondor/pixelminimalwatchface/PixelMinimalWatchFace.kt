@@ -49,7 +49,6 @@ import com.google.android.gms.wearable.*
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.math.max
-import kotlin.math.min
 
 private const val MISC_NOTIFICATION_CHANNEL_ID = "rating"
 private const val DATA_KEY_PREMIUM = "premium"
@@ -59,7 +58,23 @@ private const val MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS = 1000L
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     override fun onCreateEngine(): Engine {
-        return Engine(this, Injection.storage(this))
+        val storage = Injection.storage(this)
+
+        val latestKnownVersion = storage.getAppVersion()
+        if( BuildConfig.VERSION_CODE > latestKnownVersion ) {
+            if( latestKnownVersion > 0 ) {
+                onAppUpgrade(latestKnownVersion, BuildConfig.VERSION_CODE)
+            }
+
+            storage.setAppVersion(BuildConfig.VERSION_CODE)
+        }
+
+        return Engine(this, storage)
+    }
+
+    @Suppress("SameParameterValue", "UNUSED_PARAMETER")
+    private fun onAppUpgrade(oldVersion: Int, newVersion: Int) {
+        // No-op
     }
 
     private class ComplicationTimeDependentUpdateHandler(private val engine: WeakReference<Engine>,
@@ -147,20 +162,24 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             complicationsColors = storage.getComplicationColors()
 
             val leftComplicationDrawable = ComplicationDrawable(service)
+            val middleComplicationDrawable = ComplicationDrawable(service)
             val rightComplicationDrawable = ComplicationDrawable(service)
 
             complicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
             complicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
+            complicationDrawableSparseArray.put(MIDDLE_COMPLICATION_ID, middleComplicationDrawable)
             complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
 
             leftComplicationDrawable.callback = this
+            middleComplicationDrawable.callback = this
             rightComplicationDrawable.callback = this
 
             setActiveComplications(*COMPLICATION_IDS)
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
+            watchFaceDrawer.setComplicationDrawable(MIDDLE_COMPLICATION_ID, middleComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
             watchFaceDrawer.onComplicationColorsUpdate(complicationsColors, complicationDataSparseArray)
         }
@@ -261,7 +280,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
             timeDependentUpdateHandler.cancelUpdate()
 
-            if( !ambient ) {
+            if( !ambient || storage.shouldShowComplicationsInAmbientMode() ) {
                 invalidate()
             }
         }
@@ -300,36 +319,28 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             }
         }
 
+        @Suppress("SameParameterValue")
         private fun getNextComplicationUpdateDelay(): Long? {
-            val timeDependentLeftText = timeDependentTexts.get(LEFT_COMPLICATION_ID)
-            val timeDependentRightText = timeDependentTexts.get(RIGHT_COMPLICATION_ID)
+            var minValue = Long.MAX_VALUE
 
-            if( timeDependentLeftText == null && timeDependentRightText == null ) {
-                return null
-            }
-
-            var leftUpdateDelay = Long.MAX_VALUE
-            if( timeDependentLeftText != null ) {
-                val nextTimeLeft = timeDependentLeftText.getNextChangeTime(calendar.timeInMillis)
-                if( nextTimeLeft < Long.MAX_VALUE ) {
-                    leftUpdateDelay = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeLeft)
+            COMPLICATION_IDS.forEach { complicationId ->
+                val timeDependentText = timeDependentTexts.get(complicationId)
+                if( timeDependentText != null ) {
+                    val nextTime = timeDependentText.getNextChangeTime(calendar.timeInMillis)
+                    if( nextTime < Long.MAX_VALUE ) {
+                        val updateDelay = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTime)
+                        if( updateDelay < minValue ) {
+                            minValue = updateDelay
+                        }
+                    }
                 }
             }
 
-            var rightUpdateDelay = Long.MAX_VALUE
-            if( timeDependentRightText != null ) {
-                val nextTimeRight = timeDependentRightText.getNextChangeTime(calendar.timeInMillis)
-                if( nextTimeRight < Long.MAX_VALUE ) {
-                    rightUpdateDelay = max(MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS, calendar.timeInMillis - nextTimeRight)
-                }
-            }
-
-            val min = min(leftUpdateDelay, rightUpdateDelay)
-            if( min == Long.MAX_VALUE ) {
+            if( minValue == Long.MAX_VALUE ) {
                 return null
             }
 
-            return min
+            return minValue
         }
 
         fun isAmbientMode(): Boolean = ambient
@@ -396,7 +407,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         override fun invalidateDrawable(who: Drawable) {
-            if( !ambient ) {
+            if( !ambient || storage.shouldShowComplicationsInAmbientMode() ) {
                 invalidate()
             }
         }
@@ -436,12 +447,19 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
     companion object {
         const val LEFT_COMPLICATION_ID = 100
         const val RIGHT_COMPLICATION_ID = 101
+        const val MIDDLE_COMPLICATION_ID = 102
 
         private val COMPLICATION_IDS = intArrayOf(
-            LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID
+            LEFT_COMPLICATION_ID, MIDDLE_COMPLICATION_ID, RIGHT_COMPLICATION_ID
         )
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
+            intArrayOf(
+                ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_RANGED_VALUE,
+                ComplicationData.TYPE_SMALL_IMAGE
+            ),
             intArrayOf(
                 ComplicationData.TYPE_SHORT_TEXT,
                 ComplicationData.TYPE_ICON,
@@ -459,6 +477,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         fun getComplicationId(complicationLocation: ComplicationLocation): Int {
             return when (complicationLocation) {
                 ComplicationLocation.LEFT -> LEFT_COMPLICATION_ID
+                ComplicationLocation.MIDDLE -> MIDDLE_COMPLICATION_ID
                 ComplicationLocation.RIGHT -> RIGHT_COMPLICATION_ID
             }
         }
@@ -466,7 +485,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         fun getSupportedComplicationTypes(complicationLocation: ComplicationLocation): IntArray {
             return when (complicationLocation) {
                 ComplicationLocation.LEFT -> COMPLICATION_SUPPORTED_TYPES[0]
-                ComplicationLocation.RIGHT -> COMPLICATION_SUPPORTED_TYPES[1]
+                ComplicationLocation.MIDDLE -> COMPLICATION_SUPPORTED_TYPES[1]
+                ComplicationLocation.RIGHT -> COMPLICATION_SUPPORTED_TYPES[2]
             }
         }
 
