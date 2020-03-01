@@ -163,9 +163,13 @@ class ComplicationConfigRecyclerViewAdapter(
             TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG -> {
                 val previewAndComplicationsViewHolder = viewHolder as PreviewAndComplicationsViewHolder
 
-                previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
-                previewAndComplicationsViewHolder.showMiddleComplication(!storage.shouldShowWearOSLogo())
-                initializesColorsAndComplications()
+                if( !previewAndComplicationsViewHolder.bound ) {
+                    previewAndComplicationsViewHolder.bound = true
+
+                    previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
+                    previewAndComplicationsViewHolder.showMiddleComplication(!storage.shouldShowWearOSLogo())
+                    initializesColorsAndComplications()
+                }
             }
             TYPE_HOUR_FORMAT -> {
                 val use24hTimeFormat = storage.getUse24hTimeFormat()
@@ -299,6 +303,8 @@ class PreviewAndComplicationsViewHolder(
     view: View,
     private val listener: (location: ComplicationLocation) -> Unit
 ) : RecyclerView.ViewHolder(view), View.OnClickListener {
+    var bound = false
+
     private val wearOSLogoImageView: ImageView = view.findViewById(R.id.wear_os_logo_image_view)
     private val leftComplicationBackground: ImageView = view.findViewById(R.id.left_complication_background)
     private val middleComplicationBackground: ImageView = view.findViewById(R.id.middle_complication_background)
