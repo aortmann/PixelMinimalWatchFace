@@ -47,20 +47,24 @@ private const val TYPE_FOOTER = 3
 private const val TYPE_BECOME_PREMIUM = 4
 private const val TYPE_HOUR_FORMAT = 5
 private const val TYPE_SEND_FEEDBACK = 6
+private const val TYPE_SHOW_WEAR_OS_LOGO = 7
+private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
     private val premiumClickListener: () -> Unit,
     private val hourFormatSelectionListener: (Boolean) -> Unit,
-    private val onFeedbackButtonPressed: () -> Unit
+    private val onFeedbackButtonPressed: () -> Unit,
+    private val showWearOSButtonListener: (Boolean) -> Unit,
+    private val showComplicationsAmbientListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
 
     private val watchFaceComponentName = ComponentName(context, PixelMinimalWatchFace::class.java)
     private val providerInfoRetriever = ProviderInfoRetriever(context, Executors.newCachedThreadPool())
-    private lateinit var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder
+    private var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -72,7 +76,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 )
             )
             TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG -> {
-                previewAndComplicationsViewHolder =
+                val previewAndComplicationsViewHolder =
                     PreviewAndComplicationsViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.config_list_preview_and_complications_item, parent, false)) { location ->
                         selectedComplicationLocation = location
 
@@ -92,6 +96,7 @@ class ComplicationConfigRecyclerViewAdapter(
                         }
                     }
 
+                this.previewAndComplicationsViewHolder = previewAndComplicationsViewHolder
                 return previewAndComplicationsViewHolder
             }
             TYPE_COLOR_CONFIG -> return ColorPickerViewHolder(
@@ -132,6 +137,23 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 onFeedbackButtonPressed
             )
+            TYPE_SHOW_WEAR_OS_LOGO -> return ShowWearOSLogoViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_wearos_logo,
+                    parent,
+                    false
+                )) { showWearOSLogo ->
+                    showWearOSButtonListener(showWearOSLogo)
+                    previewAndComplicationsViewHolder?.showMiddleComplication(!showWearOSLogo)
+                }
+            TYPE_SHOW_COMPLICATIONS_AMBIENT -> return ShowComplicationsAmbientViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_complications_ambient,
+                    parent,
+                    false
+                ),
+                showComplicationsAmbientListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -141,12 +163,27 @@ class ComplicationConfigRecyclerViewAdapter(
             TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG -> {
                 val previewAndComplicationsViewHolder = viewHolder as PreviewAndComplicationsViewHolder
 
-                previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
-                initializesColorsAndComplications()
+                if( !previewAndComplicationsViewHolder.bound ) {
+                    previewAndComplicationsViewHolder.bound = true
+
+                    previewAndComplicationsViewHolder.setDefaultComplicationDrawable()
+                    previewAndComplicationsViewHolder.showMiddleComplication(!storage.shouldShowWearOSLogo())
+                    initializesColorsAndComplications()
+                }
             }
             TYPE_HOUR_FORMAT -> {
                 val use24hTimeFormat = storage.getUse24hTimeFormat()
                 (viewHolder as HourFormatViewHolder).setHourFormatSwitchChecked(use24hTimeFormat)
+            }
+            TYPE_SHOW_WEAR_OS_LOGO -> {
+                (viewHolder as ShowWearOSLogoViewHolder).apply {
+                    setShowWearOSLogoSwitchChecked(storage.shouldShowWearOSLogo())
+                    setPremiumTitle(storage.isUserPremium())
+                }
+            }
+            TYPE_SHOW_COMPLICATIONS_AMBIENT -> {
+                val showComplicationsAmbient = storage.shouldShowComplicationsInAmbientMode()
+                (viewHolder as ShowComplicationsAmbientViewHolder).setShowComplicationsAmbientSwitchChecked(showComplicationsAmbient)
             }
         }
     }
@@ -158,8 +195,12 @@ class ComplicationConfigRecyclerViewAdapter(
             object : OnProviderInfoReceivedCallback() {
                 override fun onProviderInfoReceived(watchFaceComplicationId: Int, complicationProviderInfo: ComplicationProviderInfo?) {
 
-                    previewAndComplicationsViewHolder.updateComplicationViews(
-                        if (watchFaceComplicationId == getComplicationId(ComplicationLocation.LEFT)) ComplicationLocation.LEFT else ComplicationLocation.RIGHT,
+                    previewAndComplicationsViewHolder?.updateComplicationViews(
+                        when (watchFaceComplicationId) {
+                            getComplicationId(ComplicationLocation.LEFT) -> { ComplicationLocation.LEFT }
+                            getComplicationId(ComplicationLocation.MIDDLE) -> { ComplicationLocation.MIDDLE }
+                            else -> { ComplicationLocation.RIGHT }
+                        },
                         complicationProviderInfo,
                         storage.getComplicationColors()
                     )
@@ -176,16 +217,19 @@ class ComplicationConfigRecyclerViewAdapter(
                 0 -> TYPE_HEADER
                 1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
                 2 -> TYPE_COLOR_CONFIG
-                3 -> TYPE_HOUR_FORMAT
-                4 -> TYPE_SEND_FEEDBACK
+                3 -> TYPE_SHOW_WEAR_OS_LOGO
+                4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
+                5 -> TYPE_HOUR_FORMAT
+                6 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
             when (position) {
                 0 -> TYPE_HEADER
                 1 -> TYPE_BECOME_PREMIUM
-                2 -> TYPE_HOUR_FORMAT
-                3 -> TYPE_SEND_FEEDBACK
+                2 -> TYPE_SHOW_WEAR_OS_LOGO
+                3 -> TYPE_HOUR_FORMAT
+                4 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -194,9 +238,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            6
+            8
         } else {
-            5
+            6
         }
     }
 
@@ -205,7 +249,7 @@ class ComplicationConfigRecyclerViewAdapter(
         val selectedComplicationLocation = selectedComplicationLocation
 
         if ( selectedComplicationLocation != null ) {
-            previewAndComplicationsViewHolder.updateComplicationViews(
+            previewAndComplicationsViewHolder?.updateComplicationViews(
                 selectedComplicationLocation,
                 complicationProviderInfo,
                 storage.getComplicationColors()
@@ -230,12 +274,12 @@ class ComplicationConfigRecyclerViewAdapter(
     }
 
     fun updatePreviewColors() {
-        previewAndComplicationsViewHolder.updateComplicationsAccentColor(storage.getComplicationColors())
+        previewAndComplicationsViewHolder?.updateComplicationsAccentColor(storage.getComplicationColors())
     }
 }
 
 enum class ComplicationLocation {
-    LEFT, RIGHT
+    LEFT, MIDDLE, RIGHT
 }
 
 class ColorPickerViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
@@ -259,49 +303,72 @@ class PreviewAndComplicationsViewHolder(
     view: View,
     private val listener: (location: ComplicationLocation) -> Unit
 ) : RecyclerView.ViewHolder(view), View.OnClickListener {
+    var bound = false
 
+    private val wearOSLogoImageView: ImageView = view.findViewById(R.id.wear_os_logo_image_view)
     private val leftComplicationBackground: ImageView = view.findViewById(R.id.left_complication_background)
+    private val middleComplicationBackground: ImageView = view.findViewById(R.id.middle_complication_background)
     private val rightComplicationBackground: ImageView = view.findViewById(R.id.right_complication_background)
     private val leftComplication: ImageButton = view.findViewById(R.id.left_complication)
+    private val middleComplication: ImageButton = view.findViewById(R.id.middle_complication)
     private val rightComplication: ImageButton = view.findViewById(R.id.right_complication)
     private var addComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
     private var addedComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.added_complication)!!
 
     init {
         leftComplication.setOnClickListener(this)
+        middleComplication.setOnClickListener(this)
         rightComplication.setOnClickListener(this)
     }
 
     fun setDefaultComplicationDrawable() {
         leftComplication.setImageDrawable(addComplicationDrawable)
+        middleComplication.setImageDrawable(addComplicationDrawable)
         rightComplication.setImageDrawable(addComplicationDrawable)
     }
 
     override fun onClick(view: View) {
-        if (view == leftComplication) {
-            listener(ComplicationLocation.LEFT)
-        } else if (view == rightComplication) {
-            listener(ComplicationLocation.RIGHT)
+        when (view) {
+            leftComplication -> { listener(ComplicationLocation.LEFT) }
+            middleComplication -> { listener(ComplicationLocation.MIDDLE) }
+            rightComplication -> { listener(ComplicationLocation.RIGHT) }
         }
+    }
+
+    fun showMiddleComplication(showMiddleComplication: Boolean) {
+        middleComplication.visibility = if( showMiddleComplication ) { View.VISIBLE } else { View.GONE }
+        middleComplicationBackground.visibility = if( showMiddleComplication ) { View.VISIBLE } else { View.INVISIBLE }
+        wearOSLogoImageView.visibility = if( !showMiddleComplication ) { View.VISIBLE } else { View.GONE }
     }
 
     fun updateComplicationViews(location: ComplicationLocation,
                                 complicationProviderInfo: ComplicationProviderInfo?,
                                 complicationColors: ComplicationColors) {
-        if (location == ComplicationLocation.LEFT) {
-            updateComplicationView(
-                complicationProviderInfo,
-                leftComplication,
-                leftComplicationBackground,
-                complicationColors
-            )
-        } else if (location == ComplicationLocation.RIGHT) {
-            updateComplicationView(
-                complicationProviderInfo,
-                rightComplication,
-                rightComplicationBackground,
-                complicationColors
-            )
+        when (location) {
+            ComplicationLocation.LEFT -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    leftComplication,
+                    leftComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.MIDDLE -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    middleComplication,
+                    middleComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.RIGHT -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    rightComplication,
+                    rightComplicationBackground,
+                    complicationColors
+                )
+            }
         }
     }
 
@@ -331,6 +398,12 @@ class PreviewAndComplicationsViewHolder(
             leftComplication.setColorFilter(Color.WHITE)
         } else {
             leftComplication.setColorFilter(colors.leftColor)
+        }
+
+        if( middleComplication.drawable == addComplicationDrawable ) {
+            middleComplication.setColorFilter(Color.WHITE)
+        } else {
+            middleComplication.setColorFilter(colors.middleColor)
         }
     }
 }
@@ -371,11 +444,49 @@ class HourFormatViewHolder(view: View,
     }
 }
 
+class ShowWearOSLogoViewHolder(view: View,
+                               showWearOSLogoClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val wearOSLogoSwitch: Switch = view as Switch
+
+    init {
+        wearOSLogoSwitch.setOnCheckedChangeListener { _, checked ->
+            showWearOSLogoClickListener(checked)
+        }
+    }
+
+    fun setShowWearOSLogoSwitchChecked(checked: Boolean) {
+        wearOSLogoSwitch.isChecked = checked
+    }
+
+    fun setPremiumTitle(userPremium: Boolean) {
+        wearOSLogoSwitch.text = itemView.context.getString(if( userPremium ) {
+            R.string.config_show_wear_os_logo_premium
+        } else {
+            R.string.config_show_wear_os_logo
+        })
+    }
+}
+
 class SendFeedbackViewHolder(view: View,
                              onFeedbackButtonPressed: () -> Unit) : RecyclerView.ViewHolder(view) {
     init {
         view.setOnClickListener {
             onFeedbackButtonPressed()
         }
+    }
+}
+
+class ShowComplicationsAmbientViewHolder(view: View,
+                                         showComplicationsAmbientClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showComplicationsAmbientSwitch: Switch = view as Switch
+
+    init {
+        showComplicationsAmbientSwitch.setOnCheckedChangeListener { _, checked ->
+            showComplicationsAmbientClickListener(checked)
+        }
+    }
+
+    fun setShowComplicationsAmbientSwitchChecked(checked: Boolean) {
+        showComplicationsAmbientSwitch.isChecked = checked
     }
 }

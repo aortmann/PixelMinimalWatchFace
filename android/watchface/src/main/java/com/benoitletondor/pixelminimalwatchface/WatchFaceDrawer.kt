@@ -21,18 +21,22 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
+import android.util.DisplayMetrics
 import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
+import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 interface WatchFaceDrawer {
     fun onCreate(context: Context, storage: Storage)
@@ -72,6 +76,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var wearOSLogo: Bitmap
     private lateinit var wearOSLogoAmbient: Bitmap
     private lateinit var productSansRegularFont: Typeface
+    private var titleSize: Int = 0
+    private var textSize: Int = 0
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
 
@@ -91,6 +97,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         productSansRegularFont = ResourcesCompat.getFont(context, R.font.product_sans_regular)!!
         timeFormatter24H = SimpleDateFormat("HH:mm", Locale.getDefault())
         timeFormatter12H = SimpleDateFormat("h:mm", Locale.getDefault())
+        titleSize = context.resources.getDimensionPixelSize(R.dimen.complication_title_size)
+        textSize = context.resources.getDimensionPixelSize(R.dimen.complication_text_size)
         timePaint = Paint().apply {
             typeface = productSansRegularFont
             strokeWidth = 1.5f
@@ -133,16 +141,18 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
     override fun onComplicationColorsUpdate(complicationColors: ComplicationColors, complicationsData: SparseArray<ComplicationData>) {
         complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
-            val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
-                complicationColors.leftColor
-            } else {
-                complicationColors.rightColor
-            }
+            val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
 
+            complicationDrawable.setTitleSizeActive(titleSize)
+            complicationDrawable.setTitleSizeAmbient(titleSize)
             complicationDrawable.setTitleColorActive(complicationTitleColor)
+            complicationDrawable.setTitleColorAmbient(complicationTitleColor)
             complicationDrawable.setIconColorActive(primaryComplicationColor)
+            complicationDrawable.setIconColorAmbient(dateColorDimmed)
             complicationDrawable.setTextTypefaceActive(productSansRegularFont)
             complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
+            complicationDrawable.setTextTypefaceAmbient(productSansRegularFont)
+            complicationDrawable.setTitleTypefaceAmbient(productSansRegularFont)
 
             onComplicationDataUpdate(complicationId, complicationDrawable, complicationsData.get(complicationId), complicationColors)
         }
@@ -152,16 +162,26 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                           complicationDrawable: ComplicationDrawable,
                                           data: ComplicationData?,
                                           complicationColors: ComplicationColors) {
-        val primaryComplicationColor = if( complicationId == LEFT_COMPLICATION_ID ) {
-            complicationColors.leftColor
-        } else {
-            complicationColors.rightColor
-        }
-
+        val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
+            complicationDrawable.setTextColorAmbient(complicationTitleColor)
+            complicationDrawable.setTextSizeActive(titleSize)
+            complicationDrawable.setTextSizeAmbient(titleSize)
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
+            complicationDrawable.setTextColorAmbient(dateColorDimmed)
+            complicationDrawable.setTextSizeActive(textSize)
+            complicationDrawable.setTextSizeAmbient(textSize)
+        }
+    }
+
+    @ColorInt
+    private fun getComplicationPrimaryColor(complicationId: Int, complicationColors: ComplicationColors): Int {
+        return when (complicationId) {
+            LEFT_COMPLICATION_ID -> { complicationColors.leftColor }
+            MIDDLE_COMPLICATION_ID -> { complicationColors.middleColor }
+            else -> { complicationColors.rightColor }
         }
     }
 
@@ -217,11 +237,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val sizeOfComplication = (screenWidth / 4.5).toInt()
         val verticalOffset = bottomY.toInt() - sizeOfComplication
+        val distanceBetweenComplications = context.dpToPx(3)
+
+        val maxWidth = max(sizeOfComplication, wearOsImage.width)
 
         val leftBounds = Rect(
-            (centerX - (wearOsImage.width / 2) - 15f - sizeOfComplication).toInt(),
+            (centerX - (maxWidth / 2) - distanceBetweenComplications - sizeOfComplication).toInt(),
             verticalOffset,
-            (centerX - (wearOsImage.width / 2)  - 15f).toInt(),
+            (centerX - (maxWidth / 2)  - distanceBetweenComplications).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
@@ -229,10 +252,21 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             leftComplicationDrawable.bounds = leftBounds
         }
 
-        val rightBounds = Rect(
-            (centerX + (wearOsImage.width / 2) + 15f).toInt(),
+        val middleBounds = Rect(
+            (centerX - (sizeOfComplication / 2)).toInt(),
             verticalOffset,
-            (centerX + (wearOsImage.width / 2)  + 15f + sizeOfComplication).toInt(),
+            (centerX + (sizeOfComplication / 2)).toInt(),
+            (verticalOffset + sizeOfComplication)
+        )
+
+        complicationsDrawable[MIDDLE_COMPLICATION_ID]?.let { middleComplicationDrawable ->
+            middleComplicationDrawable.bounds = middleBounds
+        }
+
+        val rightBounds = Rect(
+            (centerX + (maxWidth / 2) + distanceBetweenComplications).toInt(),
+            verticalOffset,
+            (centerX + (maxWidth / 2)  + distanceBetweenComplications + sizeOfComplication).toInt(),
             (verticalOffset + sizeOfComplication)
         )
 
@@ -272,14 +306,18 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     }
 
     private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
-        if( !ambient && isUserPremium ) {
-            complicationsDrawable.values.forEach { complicationDrawable ->
-                complicationDrawable.draw(canvas, currentTime.time)
+        if( isUserPremium && (storage.shouldShowComplicationsInAmbientMode() || !ambient) ) {
+            complicationsDrawable.forEach { (complicationId, complicationDrawable) ->
+                if( complicationId != MIDDLE_COMPLICATION_ID || !storage.shouldShowWearOSLogo() ) {
+                    complicationDrawable.draw(canvas, currentTime.time)
+                }
             }
         }
 
-        val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
-        canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, wearOSLogoPaint)
+        if( storage.shouldShowWearOSLogo() ) {
+            val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
+            canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, wearOSLogoPaint)
+        }
     }
 
     private fun drawBackground(canvas: Canvas) {
@@ -302,6 +340,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             isAntiAlias = !(ambient && lowBitAmbient)
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
+    }
+
+    private fun Context.dpToPx(dp: Int): Int {
+        val displayMetrics = resources.displayMetrics
+        return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
     }
 
 }
