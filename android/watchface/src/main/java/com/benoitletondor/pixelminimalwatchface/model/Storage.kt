@@ -29,6 +29,7 @@ private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
 private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
 private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
+private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -46,6 +47,8 @@ interface Storage {
     fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean)
     fun shouldShowComplicationsInAmbientMode(): Boolean
     fun setShouldShowComplicationsInAmbientMode(show: Boolean)
+    fun shouldShowFilledTimeInAmbientMode(): Boolean
+    fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -80,6 +83,7 @@ class StorageImpl : Storage {
         }
 
         return ComplicationColors(
+            color,
             color,
             color,
             color,
@@ -147,5 +151,13 @@ class StorageImpl : Storage {
 
     override fun setShouldShowComplicationsInAmbientMode(show: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, show).apply()
+    }
+
+    override fun shouldShowFilledTimeInAmbientMode(): Boolean {
+        return sharedPreferences.getBoolean(KEY_FILLED_TIME_AMBIENT, false)
+    }
+
+    override fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
     }
 }

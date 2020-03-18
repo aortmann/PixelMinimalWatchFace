@@ -49,6 +49,7 @@ private const val TYPE_HOUR_FORMAT = 5
 private const val TYPE_SEND_FEEDBACK = 6
 private const val TYPE_SHOW_WEAR_OS_LOGO = 7
 private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
+private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -57,7 +58,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val hourFormatSelectionListener: (Boolean) -> Unit,
     private val onFeedbackButtonPressed: () -> Unit,
     private val showWearOSButtonListener: (Boolean) -> Unit,
-    private val showComplicationsAmbientListener: (Boolean) -> Unit
+    private val showComplicationsAmbientListener: (Boolean) -> Unit,
+    private val showFilledTimeAmbientListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -154,6 +156,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 showComplicationsAmbientListener
             )
+            TYPE_SHOW_FILLED_TIME_AMBIENT -> return ShowFilledTimeAmbientViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_filled_time_ambient,
+                    parent,
+                    false
+                ),
+                showFilledTimeAmbientListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -185,6 +195,10 @@ class ComplicationConfigRecyclerViewAdapter(
                 val showComplicationsAmbient = storage.shouldShowComplicationsInAmbientMode()
                 (viewHolder as ShowComplicationsAmbientViewHolder).setShowComplicationsAmbientSwitchChecked(showComplicationsAmbient)
             }
+            TYPE_SHOW_FILLED_TIME_AMBIENT -> {
+                val showFilledTimeAmbient = storage.shouldShowFilledTimeInAmbientMode()
+                (viewHolder as ShowFilledTimeAmbientViewHolder).setShowFilledTimeSwitchChecked(showFilledTimeAmbient)
+            }
         }
     }
 
@@ -199,6 +213,7 @@ class ComplicationConfigRecyclerViewAdapter(
                         when (watchFaceComplicationId) {
                             getComplicationId(ComplicationLocation.LEFT) -> { ComplicationLocation.LEFT }
                             getComplicationId(ComplicationLocation.MIDDLE) -> { ComplicationLocation.MIDDLE }
+                            getComplicationId(ComplicationLocation.BOTTOM) -> { ComplicationLocation.BOTTOM }
                             else -> { ComplicationLocation.RIGHT }
                         },
                         complicationProviderInfo,
@@ -220,7 +235,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 3 -> TYPE_SHOW_WEAR_OS_LOGO
                 4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
                 5 -> TYPE_HOUR_FORMAT
-                6 -> TYPE_SEND_FEEDBACK
+                6 -> TYPE_SHOW_FILLED_TIME_AMBIENT
+                7 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
@@ -229,7 +245,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 1 -> TYPE_BECOME_PREMIUM
                 2 -> TYPE_SHOW_WEAR_OS_LOGO
                 3 -> TYPE_HOUR_FORMAT
-                4 -> TYPE_SEND_FEEDBACK
+                4 -> TYPE_SHOW_FILLED_TIME_AMBIENT
+                5 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -238,9 +255,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            8
+            9
         } else {
-            6
+            7
         }
     }
 
@@ -279,7 +296,7 @@ class ComplicationConfigRecyclerViewAdapter(
 }
 
 enum class ComplicationLocation {
-    LEFT, MIDDLE, RIGHT
+    LEFT, MIDDLE, RIGHT, BOTTOM
 }
 
 class ColorPickerViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
@@ -309,9 +326,11 @@ class PreviewAndComplicationsViewHolder(
     private val leftComplicationBackground: ImageView = view.findViewById(R.id.left_complication_background)
     private val middleComplicationBackground: ImageView = view.findViewById(R.id.middle_complication_background)
     private val rightComplicationBackground: ImageView = view.findViewById(R.id.right_complication_background)
+    private val bottomComplicationBackground: ImageView = view.findViewById(R.id.bottom_complication_background)
     private val leftComplication: ImageButton = view.findViewById(R.id.left_complication)
     private val middleComplication: ImageButton = view.findViewById(R.id.middle_complication)
     private val rightComplication: ImageButton = view.findViewById(R.id.right_complication)
+    private val bottomComplication: ImageButton = view.findViewById(R.id.bottom_complication)
     private var addComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
     private var addedComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.added_complication)!!
 
@@ -319,12 +338,14 @@ class PreviewAndComplicationsViewHolder(
         leftComplication.setOnClickListener(this)
         middleComplication.setOnClickListener(this)
         rightComplication.setOnClickListener(this)
+        bottomComplication.setOnClickListener(this)
     }
 
     fun setDefaultComplicationDrawable() {
         leftComplication.setImageDrawable(addComplicationDrawable)
         middleComplication.setImageDrawable(addComplicationDrawable)
         rightComplication.setImageDrawable(addComplicationDrawable)
+        bottomComplication.setImageDrawable(addComplicationDrawable)
     }
 
     override fun onClick(view: View) {
@@ -332,6 +353,7 @@ class PreviewAndComplicationsViewHolder(
             leftComplication -> { listener(ComplicationLocation.LEFT) }
             middleComplication -> { listener(ComplicationLocation.MIDDLE) }
             rightComplication -> { listener(ComplicationLocation.RIGHT) }
+            bottomComplication -> { listener(ComplicationLocation.BOTTOM) }
         }
     }
 
@@ -366,6 +388,14 @@ class PreviewAndComplicationsViewHolder(
                     complicationProviderInfo,
                     rightComplication,
                     rightComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.BOTTOM -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    bottomComplication,
+                    bottomComplicationBackground,
                     complicationColors
                 )
             }
@@ -404,6 +434,12 @@ class PreviewAndComplicationsViewHolder(
             middleComplication.setColorFilter(Color.WHITE)
         } else {
             middleComplication.setColorFilter(colors.middleColor)
+        }
+
+        if( bottomComplication.drawable == addComplicationDrawable ) {
+            bottomComplication.setColorFilter(Color.WHITE)
+        } else {
+            bottomComplication.setColorFilter(colors.bottomColor)
         }
     }
 }
@@ -488,5 +524,20 @@ class ShowComplicationsAmbientViewHolder(view: View,
 
     fun setShowComplicationsAmbientSwitchChecked(checked: Boolean) {
         showComplicationsAmbientSwitch.isChecked = checked
+    }
+}
+
+class ShowFilledTimeAmbientViewHolder(view: View,
+                                      showFilledTimeClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showFilledTimeSwitch: Switch = view as Switch
+
+    init {
+        showFilledTimeSwitch.setOnCheckedChangeListener { _, checked ->
+            showFilledTimeClickListener(!checked)
+        }
+    }
+
+    fun setShowFilledTimeSwitchChecked(checked: Boolean) {
+        showFilledTimeSwitch.isChecked = !checked
     }
 }
