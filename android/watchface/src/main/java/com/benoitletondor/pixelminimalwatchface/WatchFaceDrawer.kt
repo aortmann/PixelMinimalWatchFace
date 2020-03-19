@@ -171,8 +171,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
             complicationDrawable.setTextColorAmbient(complicationTitleColor)
-            complicationDrawable.setTextSizeActive(titleSize)
-            complicationDrawable.setTextSizeAmbient(titleSize)
+            if( complicationId != BOTTOM_COMPLICATION_ID ) {
+                complicationDrawable.setTextSizeActive(titleSize)
+                complicationDrawable.setTextSizeAmbient(titleSize)
+            } else {
+                complicationDrawable.setTextSizeActive(textSize)
+                complicationDrawable.setTextSizeAmbient(textSize)
+            }
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
             complicationDrawable.setTextColorAmbient(dateColorDimmed)
@@ -284,7 +289,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
 
         val availableBottomSpace = screenHeight - bottomTop - chinSize - context.dpToPx(15)
-        val bottomComplicationHeight = min(availableBottomSpace, sizeOfComplication.toFloat() / 1.5f)
+        val bottomComplicationHeight = min(availableBottomSpace, context.dpToPx(36).toFloat())
         val bottomComplicationBottom = (bottomTop + bottomComplicationHeight).toInt()
         val bottomComplicationLeft = computeComplicationLeft(bottomComplicationBottom, screenHeight)
         val bottomBounds = Rect(
