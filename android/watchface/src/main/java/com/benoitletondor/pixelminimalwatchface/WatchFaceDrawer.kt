@@ -227,7 +227,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val complicationsDrawingCache = buildComplicationDrawingCache(
             timeYOffset - timeTextBounds.height() - context.dpToPx(2),
-            dateYOffset + (dateTextBounds.height() / 2)
+            dateYOffset + dateTextBounds.height() / 2
         )
 
         return DrawingState.CacheAvailable(
@@ -285,11 +285,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val availableBottomSpace = screenHeight - bottomTop - chinSize - context.dpToPx(15)
         val bottomComplicationHeight = min(availableBottomSpace, sizeOfComplication.toFloat() / 1.5f)
-        val bottomComplicationBottom = (bottomTop + ((availableBottomSpace - bottomComplicationHeight) / 2).toInt() + bottomComplicationHeight).toInt()
+        val bottomComplicationBottom = (bottomTop + bottomComplicationHeight).toInt()
         val bottomComplicationLeft = computeComplicationLeft(bottomComplicationBottom, screenHeight)
         val bottomBounds = Rect(
             bottomComplicationLeft,
-            bottomTop.toInt() + ((availableBottomSpace - bottomComplicationHeight) / 2).toInt(),
+            bottomTop.toInt(),
             screenWidth - bottomComplicationLeft,
             bottomComplicationBottom
         )
