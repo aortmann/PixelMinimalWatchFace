@@ -481,11 +481,11 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationData.TYPE_SMALL_IMAGE
             ),
             intArrayOf(
+                ComplicationData.TYPE_LONG_TEXT,
                 ComplicationData.TYPE_SHORT_TEXT,
                 ComplicationData.TYPE_ICON,
-                ComplicationData.TYPE_LONG_TEXT,
-                ComplicationData.TYPE_RANGED_VALUE,
-                ComplicationData.TYPE_SMALL_IMAGE
+                ComplicationData.TYPE_SMALL_IMAGE,
+                ComplicationData.TYPE_RANGED_VALUE
             )
         )
 

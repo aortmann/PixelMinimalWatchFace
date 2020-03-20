@@ -36,9 +36,7 @@ import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 interface WatchFaceDrawer {
     fun onCreate(context: Context, storage: Storage)
@@ -81,6 +79,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private var titleSize: Int = 0
     private var textSize: Int = 0
     private var chinSize: Int = 0
+    private var isRound: Boolean = false
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
 
@@ -129,6 +128,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
 
         chinSize = insets.systemWindowInsetBottom
+        isRound = insets.isRound
     }
 
     override fun onSurfaceChanged(width: Int, height: Int) {
@@ -171,8 +171,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
             complicationDrawable.setTextColorAmbient(complicationTitleColor)
-            complicationDrawable.setTextSizeActive(titleSize)
-            complicationDrawable.setTextSizeAmbient(titleSize)
+            if( complicationId != BOTTOM_COMPLICATION_ID ) {
+                complicationDrawable.setTextSizeActive(titleSize)
+                complicationDrawable.setTextSizeAmbient(titleSize)
+            } else {
+                complicationDrawable.setTextSizeActive(textSize)
+                complicationDrawable.setTextSizeAmbient(textSize)
+            }
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
             complicationDrawable.setTextColorAmbient(dateColorDimmed)
@@ -227,7 +232,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val complicationsDrawingCache = buildComplicationDrawingCache(
             timeYOffset - timeTextBounds.height() - context.dpToPx(2),
-            dateYOffset + (dateTextBounds.height() / 2)
+            dateYOffset + dateTextBounds.height() / 2
         )
 
         return DrawingState.CacheAvailable(
@@ -284,12 +289,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
 
         val availableBottomSpace = screenHeight - bottomTop - chinSize - context.dpToPx(15)
-        val bottomComplicationHeight = min(availableBottomSpace, sizeOfComplication.toFloat())
+        val bottomComplicationHeight = min(availableBottomSpace, context.dpToPx(36).toFloat())
+        val bottomComplicationBottom = (bottomTop + bottomComplicationHeight).toInt()
+        val bottomComplicationLeft = computeComplicationLeft(bottomComplicationBottom, screenHeight)
         val bottomBounds = Rect(
-            (centerX - sizeOfComplication).toInt(),
-            bottomTop.toInt() + ((availableBottomSpace - bottomComplicationHeight) / 2).toInt(),
-            (centerX + sizeOfComplication).toInt(),
-            (bottomTop + ((availableBottomSpace - bottomComplicationHeight) / 2).toInt() + bottomComplicationHeight).toInt()
+            bottomComplicationLeft,
+            bottomTop.toInt(),
+            screenWidth - bottomComplicationLeft,
+            bottomComplicationBottom
         )
 
         complicationsDrawable[BOTTOM_COMPLICATION_ID]?.let { bottomComplicationDrawable ->
@@ -303,6 +310,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             iconXOffset,
             iconYOffset.toFloat()
         )
+    }
+
+    private fun computeComplicationLeft(bottomY: Int, screenHeight: Int): Int {
+        return if( isRound ) {
+            screenHeight / 2 - sqrt((screenHeight / 2).toDouble().pow(2) - ((bottomY - (screenHeight / 2)).toDouble().pow(2))).toInt()
+        } else {
+            context.dpToPx(10)
+        }
     }
 
     private fun DrawingState.CacheAvailable.draw(canvas: Canvas,
