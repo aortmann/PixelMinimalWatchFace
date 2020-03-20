@@ -27,6 +27,7 @@ import android.view.WindowInsets
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.BOTTOM_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
@@ -35,8 +36,7 @@ import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.max
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 interface WatchFaceDrawer {
     fun onCreate(context: Context, storage: Storage)
@@ -78,6 +78,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var productSansRegularFont: Typeface
     private var titleSize: Int = 0
     private var textSize: Int = 0
+    private var chinSize: Int = 0
+    private var isRound: Boolean = false
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
 
@@ -124,6 +126,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                 R.dimen.date_text_size
             }
         )
+
+        chinSize = insets.systemWindowInsetBottom
+        isRound = insets.isRound
     }
 
     override fun onSurfaceChanged(width: Int, height: Int) {
@@ -166,8 +171,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         if( data != null && data.icon != null ) {
             complicationDrawable.setTextColorActive(complicationTitleColor)
             complicationDrawable.setTextColorAmbient(complicationTitleColor)
-            complicationDrawable.setTextSizeActive(titleSize)
-            complicationDrawable.setTextSizeAmbient(titleSize)
+            if( complicationId != BOTTOM_COMPLICATION_ID ) {
+                complicationDrawable.setTextSizeActive(titleSize)
+                complicationDrawable.setTextSizeAmbient(titleSize)
+            } else {
+                complicationDrawable.setTextSizeActive(textSize)
+                complicationDrawable.setTextSizeAmbient(textSize)
+            }
         } else {
             complicationDrawable.setTextColorActive(primaryComplicationColor)
             complicationDrawable.setTextColorAmbient(dateColorDimmed)
@@ -181,6 +191,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         return when (complicationId) {
             LEFT_COMPLICATION_ID -> { complicationColors.leftColor }
             MIDDLE_COMPLICATION_ID -> { complicationColors.middleColor }
+            BOTTOM_COMPLICATION_ID -> { complicationColors.bottomColor }
             else -> { complicationColors.rightColor }
         }
     }
@@ -213,13 +224,16 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
         val timeYOffset = centerY + (timeTextBounds.height() / 2.0f ) - 5f
 
-        val complicationsDrawingCache = buildComplicationDrawingCache(timeYOffset - timeTextBounds.height() - 10f)
-
         val dateText = "May, 15"
         val dateTextBounds = Rect().apply {
             datePaint.getTextBounds(dateText, 0, dateText.length, this)
         }
-        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + 20f
+        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + context.dpToPx(8)
+
+        val complicationsDrawingCache = buildComplicationDrawingCache(
+            timeYOffset - timeTextBounds.height() - context.dpToPx(2),
+            dateYOffset + dateTextBounds.height() / 2
+        )
 
         return DrawingState.CacheAvailable(
             screenWidth,
@@ -232,11 +246,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         )
     }
 
-    private fun DrawingState.NoCacheAvailable.buildComplicationDrawingCache(bottomY: Float): ComplicationsDrawingCache {
+    private fun DrawingState.NoCacheAvailable.buildComplicationDrawingCache(topBottom: Float, bottomTop: Float): ComplicationsDrawingCache {
         val wearOsImage = wearOSLogo
 
         val sizeOfComplication = (screenWidth / 4.5).toInt()
-        val verticalOffset = bottomY.toInt() - sizeOfComplication
+        val verticalOffset = topBottom.toInt() - sizeOfComplication
         val distanceBetweenComplications = context.dpToPx(3)
 
         val maxWidth = max(sizeOfComplication, wearOsImage.width)
@@ -274,6 +288,21 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             rightComplicationDrawable.bounds = rightBounds
         }
 
+        val availableBottomSpace = screenHeight - bottomTop - chinSize - context.dpToPx(15)
+        val bottomComplicationHeight = min(availableBottomSpace, context.dpToPx(36).toFloat())
+        val bottomComplicationBottom = (bottomTop + bottomComplicationHeight).toInt()
+        val bottomComplicationLeft = computeComplicationLeft(bottomComplicationBottom, screenHeight)
+        val bottomBounds = Rect(
+            bottomComplicationLeft,
+            bottomTop.toInt(),
+            screenWidth - bottomComplicationLeft,
+            bottomComplicationBottom
+        )
+
+        complicationsDrawable[BOTTOM_COMPLICATION_ID]?.let { bottomComplicationDrawable ->
+            bottomComplicationDrawable.bounds = bottomBounds
+        }
+
         val iconXOffset = centerX - (wearOsImage.width / 2.0f)
         val iconYOffset = leftBounds.top + (leftBounds.height() / 2) - (wearOsImage.height / 2)
 
@@ -281,6 +310,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             iconXOffset,
             iconYOffset.toFloat()
         )
+    }
+
+    private fun computeComplicationLeft(bottomY: Int, screenHeight: Int): Int {
+        return if( isRound ) {
+            screenHeight / 2 - sqrt((screenHeight / 2).toDouble().pow(2) - ((bottomY - (screenHeight / 2)).toDouble().pow(2))).toInt()
+        } else {
+            context.dpToPx(10)
+        }
     }
 
     private fun DrawingState.CacheAvailable.draw(canvas: Canvas,
@@ -332,7 +369,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         timePaint.apply {
             isAntiAlias = !(ambient && lowBitAmbient)
-            style = if( ambient ) { Paint.Style.STROKE } else { Paint.Style.FILL }
+            style = if( ambient && !storage.shouldShowFilledTimeInAmbientMode() ) { Paint.Style.STROKE } else { Paint.Style.FILL }
             color = if( ambient ) { timeColorDimmed } else { timeColor }
         }
 

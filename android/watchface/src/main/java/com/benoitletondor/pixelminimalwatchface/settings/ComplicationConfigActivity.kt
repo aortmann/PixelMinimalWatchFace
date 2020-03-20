@@ -56,6 +56,8 @@ class ComplicationConfigActivity : Activity() {
             storage.setShouldShowWearOSLogo(showWearOSLogo)
         }, { showComplicationsAmbient ->
             storage.setShouldShowComplicationsInAmbientMode(showComplicationsAmbient)
+        }, { showFilledTimeAmbient ->
+            storage.setShouldShowFilledTimeInAmbientMode(showFilledTimeAmbient)
         })
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true

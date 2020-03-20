@@ -164,6 +164,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             val leftComplicationDrawable = ComplicationDrawable(service)
             val middleComplicationDrawable = ComplicationDrawable(service)
             val rightComplicationDrawable = ComplicationDrawable(service)
+            val bottomComplicationDrawable = ComplicationDrawable(service)
 
             complicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
             complicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
@@ -171,16 +172,19 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             complicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             complicationDrawableSparseArray.put(MIDDLE_COMPLICATION_ID, middleComplicationDrawable)
             complicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+            complicationDrawableSparseArray.put(BOTTOM_COMPLICATION_ID, bottomComplicationDrawable)
 
             leftComplicationDrawable.callback = this
             middleComplicationDrawable.callback = this
             rightComplicationDrawable.callback = this
+            bottomComplicationDrawable.callback = this
 
             setActiveComplications(*COMPLICATION_IDS)
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(MIDDLE_COMPLICATION_ID, middleComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+            watchFaceDrawer.setComplicationDrawable(BOTTOM_COMPLICATION_ID, bottomComplicationDrawable)
             watchFaceDrawer.onComplicationColorsUpdate(complicationsColors, complicationDataSparseArray)
         }
 
@@ -448,9 +452,13 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         const val LEFT_COMPLICATION_ID = 100
         const val RIGHT_COMPLICATION_ID = 101
         const val MIDDLE_COMPLICATION_ID = 102
+        const val BOTTOM_COMPLICATION_ID = 103
 
         private val COMPLICATION_IDS = intArrayOf(
-            LEFT_COMPLICATION_ID, MIDDLE_COMPLICATION_ID, RIGHT_COMPLICATION_ID
+            LEFT_COMPLICATION_ID,
+            MIDDLE_COMPLICATION_ID,
+            RIGHT_COMPLICATION_ID,
+            BOTTOM_COMPLICATION_ID
         )
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
@@ -471,6 +479,13 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationData.TYPE_ICON,
                 ComplicationData.TYPE_RANGED_VALUE,
                 ComplicationData.TYPE_SMALL_IMAGE
+            ),
+            intArrayOf(
+                ComplicationData.TYPE_LONG_TEXT,
+                ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_ICON,
+                ComplicationData.TYPE_SMALL_IMAGE,
+                ComplicationData.TYPE_RANGED_VALUE
             )
         )
 
@@ -479,6 +494,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationLocation.LEFT -> LEFT_COMPLICATION_ID
                 ComplicationLocation.MIDDLE -> MIDDLE_COMPLICATION_ID
                 ComplicationLocation.RIGHT -> RIGHT_COMPLICATION_ID
+                ComplicationLocation.BOTTOM -> BOTTOM_COMPLICATION_ID
             }
         }
 
@@ -487,6 +503,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationLocation.LEFT -> COMPLICATION_SUPPORTED_TYPES[0]
                 ComplicationLocation.MIDDLE -> COMPLICATION_SUPPORTED_TYPES[1]
                 ComplicationLocation.RIGHT -> COMPLICATION_SUPPORTED_TYPES[2]
+                ComplicationLocation.BOTTOM -> COMPLICATION_SUPPORTED_TYPES[3]
             }
         }
 

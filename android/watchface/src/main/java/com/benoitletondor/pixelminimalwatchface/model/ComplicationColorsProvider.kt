@@ -26,11 +26,13 @@ object ComplicationColorsProvider {
         val leftColor = ContextCompat.getColor(context, R.color.complication_default_left_color)
         val middleColor = ContextCompat.getColor(context, R.color.complication_default_middle_color)
         val rightColor = ContextCompat.getColor(context, R.color.complication_default_right_color)
+        val bottomColor = ContextCompat.getColor(context, R.color.complication_default_bottom_color)
 
         return ComplicationColors(
             leftColor,
             middleColor,
             rightColor,
+            bottomColor,
             context.getString(R.string.color_default),
             true
         )
