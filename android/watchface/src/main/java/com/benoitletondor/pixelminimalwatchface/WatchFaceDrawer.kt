@@ -21,7 +21,6 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
-import android.util.DisplayMetrics
 import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
@@ -31,6 +30,7 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
+import com.benoitletondor.pixelminimalwatchface.helper.dpToPx
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
@@ -158,6 +158,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             complicationDrawable.setTitleTypefaceActive(productSansRegularFont)
             complicationDrawable.setTextTypefaceAmbient(productSansRegularFont)
             complicationDrawable.setTitleTypefaceAmbient(productSansRegularFont)
+
+            if( complicationId == BOTTOM_COMPLICATION_ID ) {
+                complicationDrawable.setBorderColorActive(ContextCompat.getColor(context, R.color.transparent))
+                complicationDrawable.setBorderColorAmbient(ContextCompat.getColor(context, R.color.transparent))
+            }
 
             onComplicationDataUpdate(complicationId, complicationDrawable, complicationsData.get(complicationId), complicationColors)
         }
@@ -292,10 +297,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val bottomComplicationHeight = min(availableBottomSpace, context.dpToPx(36).toFloat())
         val bottomComplicationBottom = (bottomTop + bottomComplicationHeight).toInt()
         val bottomComplicationLeft = computeComplicationLeft(bottomComplicationBottom, screenHeight)
+        val bottomComplicationWidth = (screenWidth - 2* bottomComplicationLeft) * 0.9
         val bottomBounds = Rect(
-            bottomComplicationLeft,
-            bottomTop.toInt(),
-            screenWidth - bottomComplicationLeft,
+            (centerX - (bottomComplicationWidth / 2)).toInt(),
+            bottomTop.toInt() + context.dpToPx(5),
+            (centerX + (bottomComplicationWidth / 2)).toInt(),
             bottomComplicationBottom
         )
 
@@ -378,12 +384,6 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
     }
-
-    private fun Context.dpToPx(dp: Int): Int {
-        val displayMetrics = resources.displayMetrics
-        return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
-    }
-
 }
 
 private sealed class DrawingState {
