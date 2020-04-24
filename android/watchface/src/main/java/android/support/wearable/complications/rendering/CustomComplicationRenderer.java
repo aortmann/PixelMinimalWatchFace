@@ -1,3 +1,18 @@
+/*
+ *   Copyright 2020 Benoit LETONDOR
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
 package android.support.wearable.complications.rendering;
 
 import android.content.Context;
@@ -33,18 +48,10 @@ import java.util.Objects;
 
 import static android.text.Layout.Alignment.ALIGN_CENTER;
 
+/**
+ * This is a copy of ComplicationRenderer code with bad hacks, don't look at it, it's horrible!
+ */
 public class CustomComplicationRenderer extends ComplicationRenderer {
-    private static final String TAG = "ComplicationRenderer";
-    @VisibleForTesting
-    static final boolean DEBUG_MODE = false;
-    @VisibleForTesting
-    static final int STROKE_GAP_IN_DEGREES = 4;
-    @VisibleForTesting
-    static final int RANGED_VALUE_START_ANGLE = -90;
-    private static final float ICON_SIZE_FRACTION = 1.0F;
-    private static final float SMALL_IMAGE_SIZE_FRACTION = 0.95F;
-    private static final float LARGE_IMAGE_SIZE_FRACTION = 1.0F;
-    private static final float TEXT_PADDING_HEIGHT_FRACTION = 0.1F;
     private final Context mContext;
     private ComplicationData mComplicationData;
     private final Rect mBounds = new Rect();
