@@ -335,6 +335,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 }
 
                 icon.setColorFilter(paintSet.iconColorFilter);
+
                 drawIconOnCanvas(canvas, this.mIconBounds, icon);
             }
 
@@ -489,8 +490,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
             }
 
             if (!this.mIconBounds.isEmpty()) {
-                LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 1.0F);
-                LayoutUtils.fitSquareToBounds(this.mIconBounds, innerBounds);
+                LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 0.80F);
             }
 
             if (!this.mSmallImageBounds.isEmpty()) {
