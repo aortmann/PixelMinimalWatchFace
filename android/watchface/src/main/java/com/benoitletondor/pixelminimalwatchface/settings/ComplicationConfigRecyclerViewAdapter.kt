@@ -36,6 +36,7 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationIds
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getSupportedComplicationTypes
 import com.benoitletondor.pixelminimalwatchface.R
+import com.benoitletondor.pixelminimalwatchface.helper.isScreenRound
 import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToHumanReadableString
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
@@ -72,6 +73,7 @@ class ComplicationConfigRecyclerViewAdapter(
     private val watchFaceComponentName = ComponentName(context, PixelMinimalWatchFace::class.java)
     private val providerInfoRetriever = ProviderInfoRetriever(context, Executors.newCachedThreadPool())
     private var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder? = null
+    private val settings = generateSettingsList(context, storage)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -255,43 +257,37 @@ class ComplicationConfigRecyclerViewAdapter(
         )
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if( storage.isUserPremium() ) {
-            when (position) {
-                0 -> TYPE_HEADER
-                1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
-                2 -> TYPE_COLOR_CONFIG
-                3 -> TYPE_SHOW_WEAR_OS_LOGO
-                4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
-                5 -> TYPE_HOUR_FORMAT
-                6 -> TYPE_TIME_SIZE
-                7 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                8 -> TYPE_SHOW_SECONDS_RING
-                9 -> TYPE_SEND_FEEDBACK
-                else -> TYPE_FOOTER
-            }
-        } else {
-            when (position) {
-                0 -> TYPE_HEADER
-                1 -> TYPE_BECOME_PREMIUM
-                2 -> TYPE_SHOW_WEAR_OS_LOGO
-                3 -> TYPE_HOUR_FORMAT
-                4 -> TYPE_TIME_SIZE
-                5 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                6 -> TYPE_SHOW_SECONDS_RING
-                7 -> TYPE_SEND_FEEDBACK
-                else -> TYPE_FOOTER
-            }
-        }
+    override fun getItemViewType(position: Int): Int = settings[position]
 
-    }
+    override fun getItemCount(): Int = settings.size
 
-    override fun getItemCount(): Int {
-        return if( storage.isUserPremium() ) {
-            11
+    private fun generateSettingsList(context: Context, storage: Storage): List<Int> {
+        val isUserPremium = storage.isUserPremium()
+        val isScreenRound = context.isScreenRound()
+
+        val list = ArrayList<Int>(11)
+
+        list.add(TYPE_HEADER)
+        if( isUserPremium ) {
+            list.add(TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG)
+            list.add(TYPE_COLOR_CONFIG)
         } else {
-            9
+            list.add(TYPE_BECOME_PREMIUM)
         }
+        list.add(TYPE_SHOW_WEAR_OS_LOGO)
+        if( isUserPremium ) {
+            list.add(TYPE_SHOW_COMPLICATIONS_AMBIENT)
+        }
+        list.add(TYPE_HOUR_FORMAT)
+        list.add(TYPE_TIME_SIZE)
+        list.add(TYPE_SHOW_FILLED_TIME_AMBIENT)
+        if( isScreenRound ) {
+            list.add(TYPE_SHOW_SECONDS_RING)
+        }
+        list.add(TYPE_SEND_FEEDBACK)
+        list.add(TYPE_FOOTER)
+
+        return list
     }
 
     /** Updates the selected complication id saved earlier with the new information.  */
