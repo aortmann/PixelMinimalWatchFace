@@ -21,6 +21,7 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
+import android.util.DisplayMetrics
 import android.util.SparseArray
 import android.view.WindowInsets
 import androidx.annotation.ColorInt
@@ -30,7 +31,6 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
-import com.benoitletondor.pixelminimalwatchface.helper.dpToPx
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
@@ -67,6 +67,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var wearOSLogoPaint: Paint
     private lateinit var timePaint: Paint
     private lateinit var datePaint: Paint
+    private lateinit var secondsRingPaint: Paint
     @ColorInt private var backgroundColor: Int = 0
     @ColorInt private var timeColor: Int = 0
     @ColorInt private var timeColorDimmed: Int = 0
@@ -82,11 +83,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private var isRound: Boolean = false
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
+    private var currentTimeSize = 0
+    private val secondsCalendar = Calendar.getInstance()
 
     override fun onCreate(context: Context, storage: Storage) {
         this.context = context
         this.storage = storage
 
+        currentTimeSize = storage.getTimeSize()
         wearOSLogoPaint = Paint()
         backgroundColor = ContextCompat.getColor(context, R.color.face_background)
         timeColor = ContextCompat.getColor(context, R.color.face_time)
@@ -108,25 +112,15 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         datePaint = Paint().apply {
             typeface = productSansRegularFont
         }
+        secondsRingPaint = Paint().apply {
+            style = Paint.Style.STROKE
+            color = Color.WHITE
+            strokeWidth = 10F
+            isAntiAlias = true
+        }
     }
 
     override fun onApplyWindowInsets(insets: WindowInsets) {
-        timePaint.textSize = context.resources.getDimension(
-            if( insets.isRound ) {
-                R.dimen.time_text_size_round
-            } else {
-                R.dimen.time_text_size
-            }
-        )
-
-        datePaint.textSize = context.resources.getDimension(
-            if( insets.isRound ) {
-                R.dimen.date_text_size_round
-            } else {
-                R.dimen.date_text_size
-            }
-        )
-
         chinSize = insets.systemWindowInsetBottom
         isRound = insets.isRound
     }
@@ -214,15 +208,28 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val currentDrawingState = drawingState
         if( currentDrawingState is DrawingState.NoCacheAvailable ) {
             drawingState = currentDrawingState.buildCache()
+        } else if( currentDrawingState is DrawingState.CacheAvailable && currentTimeSize != storage.getTimeSize() ) {
+            drawingState = currentDrawingState.buildCache()
         }
 
         val drawingState = drawingState
         if( drawingState is DrawingState.CacheAvailable ){
-            drawingState.draw(canvas, currentTime, muteMode, ambient, lowBitAmbient, burnInProtection, storage.isUserPremium())
+            drawingState.draw(
+                canvas,
+                currentTime,
+                muteMode, ambient,
+                lowBitAmbient,
+                burnInProtection,
+                storage.isUserPremium(),
+                storage.shouldShowSecondsRing()
+            )
         }
     }
 
     private fun DrawingState.NoCacheAvailable.buildCache(): DrawingState.CacheAvailable {
+        val timeSize = storage.getTimeSize()
+        setTimeAndDatePaintSize(timeSize)
+
         val timeText = "22:13"
         val timeTextBounds = Rect().apply {
             timePaint.getTextBounds(timeText, 0, timeText.length, this)
@@ -239,6 +246,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             timeYOffset - timeTextBounds.height() - context.dpToPx(2),
             dateYOffset + dateTextBounds.height() / 2
         )
+
+        currentTimeSize = timeSize
 
         return DrawingState.CacheAvailable(
             screenWidth,
@@ -332,7 +341,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                                  ambient:Boolean,
                                                  lowBitAmbient: Boolean,
                                                  burnInProtection: Boolean,
-                                                 isUserPremium: Boolean) {
+                                                 isUserPremium: Boolean,
+                                                 drawSecondsRing: Boolean) {
         val timeText = if( storage.getUse24hTimeFormat()) {
             timeFormatter24H.format(currentTime)
         } else {
@@ -346,6 +356,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
         val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
         canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
+
+        if( drawSecondsRing && !ambient ) {
+            secondsCalendar.time = currentTime
+
+            val endAngle = (secondsCalendar.get(Calendar.SECOND) * 6).toFloat()
+            canvas.drawArc(0F, 0F, screenWidth.toFloat(), screenHeight.toFloat(), 270F, endAngle, false, secondsRingPaint)
+        }
     }
 
     private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
@@ -361,6 +378,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             val wearOsImage = if( ambient ) { wearOSLogoAmbient } else { wearOSLogo }
             canvas.drawBitmap(wearOsImage, iconXOffset, iconYOffset, wearOSLogoPaint)
         }
+    }
+
+    private fun DrawingState.CacheAvailable.buildCache(): DrawingState.CacheAvailable {
+        return DrawingState.NoCacheAvailable(screenWidth, screenHeight, centerX, centerY).buildCache()
     }
 
     private fun drawBackground(canvas: Canvas) {
@@ -383,6 +404,31 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             isAntiAlias = !(ambient && lowBitAmbient)
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
+    }
+
+    private fun Context.dpToPx(dp: Int): Int {
+        val displayMetrics = resources.displayMetrics
+        return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
+    }
+
+    private fun setTimeAndDatePaintSize(timeSize: Int) {
+        val scaleFactor = timeSizeToScaleFactor(timeSize)
+
+        timePaint.textSize = context.resources.getDimension(
+            if( isRound ) {
+                R.dimen.time_text_size_round
+            } else {
+                R.dimen.time_text_size
+            }
+        ) * scaleFactor
+
+        datePaint.textSize = context.resources.getDimension(
+            if( isRound ) {
+                R.dimen.date_text_size_round
+            } else {
+                R.dimen.date_text_size
+            }
+        ) * scaleFactor
     }
 }
 
