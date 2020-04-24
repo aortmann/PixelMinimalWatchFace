@@ -51,7 +51,8 @@ private const val TYPE_SEND_FEEDBACK = 6
 private const val TYPE_SHOW_WEAR_OS_LOGO = 7
 private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
-private const val TYPE_TIME_SIZE = 11
+private const val TYPE_TIME_SIZE = 10
+private const val TYPE_SHOW_SECONDS_RING = 11
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -62,7 +63,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val showWearOSButtonListener: (Boolean) -> Unit,
     private val showComplicationsAmbientListener: (Boolean) -> Unit,
     private val showFilledTimeAmbientListener: (Boolean) -> Unit,
-    private val timeSizeChangedListener: (Int) -> Unit
+    private val timeSizeChangedListener: (Int) -> Unit,
+    private val showSecondsRingListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -175,6 +177,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 timeSizeChangedListener
             )
+            TYPE_SHOW_SECONDS_RING -> return ShowSecondsRingViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_seconds_ring,
+                    parent,
+                    false
+                ),
+                showSecondsRingListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -214,6 +224,10 @@ class ComplicationConfigRecyclerViewAdapter(
                 val size = storage.getTimeSize()
                 (viewHolder as TimeSizeViewHolder).setTimeSize(size)
             }
+            TYPE_SHOW_SECONDS_RING -> {
+                val showSeconds = storage.shouldShowSecondsRing()
+                (viewHolder as ShowSecondsRingViewHolder).setShowSecondsRingSwitchChecked(showSeconds)
+            }
         }
     }
 
@@ -252,7 +266,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 5 -> TYPE_HOUR_FORMAT
                 6 -> TYPE_TIME_SIZE
                 7 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                8 -> TYPE_SEND_FEEDBACK
+                8 -> TYPE_SHOW_SECONDS_RING
+                9 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
@@ -263,7 +278,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 3 -> TYPE_HOUR_FORMAT
                 4 -> TYPE_TIME_SIZE
                 5 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                6 -> TYPE_SEND_FEEDBACK
+                6 -> TYPE_SHOW_SECONDS_RING
+                7 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -272,9 +288,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            10
+            11
         } else {
-            8
+            9
         }
     }
 
@@ -568,7 +584,7 @@ class TimeSizeViewHolder(view: View,
     init {
         timeSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val convertedProgress = (progress/stepSize) * stepSize
+                val convertedProgress = (progress / stepSize) * stepSize
                 seekBar.progress = convertedProgress
                 setText(convertedProgress)
 
@@ -587,6 +603,24 @@ class TimeSizeViewHolder(view: View,
     }
 
     private fun setText(size: Int) {
-        timeSizeText.text = itemView.context.getString(R.string.config_time_size, itemView.context.timeSizeToHumanReadableString(size))
+        timeSizeText.text = itemView.context.getString(
+            R.string.config_time_size,
+            itemView.context.timeSizeToHumanReadableString(size)
+        )
+    }
+}
+
+class ShowSecondsRingViewHolder(view: View,
+                                      showSecondsRingClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showSecondsRingSwitch: Switch = view as Switch
+
+    init {
+        showSecondsRingSwitch.setOnCheckedChangeListener { _, checked ->
+            showSecondsRingClickListener(checked)
+        }
+    }
+
+    fun setShowSecondsRingSwitchChecked(checked: Boolean) {
+        showSecondsRingSwitch.isChecked = checked
     }
 }

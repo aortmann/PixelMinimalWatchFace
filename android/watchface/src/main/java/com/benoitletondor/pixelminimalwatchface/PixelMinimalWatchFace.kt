@@ -325,6 +325,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         @Suppress("SameParameterValue")
         private fun getNextComplicationUpdateDelay(): Long? {
+            if( storage.shouldShowSecondsRing() ) {
+                return 1000
+            }
+
             var minValue = Long.MAX_VALUE
 
             COMPLICATION_IDS.forEach { complicationId ->
