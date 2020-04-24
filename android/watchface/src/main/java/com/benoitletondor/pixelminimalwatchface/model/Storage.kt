@@ -17,6 +17,7 @@ package com.benoitletondor.pixelminimalwatchface.model
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.benoitletondor.pixelminimalwatchface.helper.DEFAULT_TIME_SIZE
 
 private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 
@@ -30,6 +31,7 @@ private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
 private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
+private const val KEY_TIME_SIZE = "timeSize"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -49,6 +51,8 @@ interface Storage {
     fun setShouldShowComplicationsInAmbientMode(show: Boolean)
     fun shouldShowFilledTimeInAmbientMode(): Boolean
     fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
+    fun getTimeSize(): Int
+    fun setTimeSize(timeSize: Int)
 }
 
 class StorageImpl : Storage {
@@ -56,6 +60,9 @@ class StorageImpl : Storage {
 
     private lateinit var appContext: Context
     private lateinit var sharedPreferences: SharedPreferences
+
+    private var timeSizeCached = false
+    private var cacheTimeSize = 0
 
     fun init(context: Context): Storage {
         if( !initialized ) {
@@ -159,5 +166,21 @@ class StorageImpl : Storage {
 
     override fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
+    }
+
+    override fun getTimeSize(): Int {
+        if( !timeSizeCached ) {
+            cacheTimeSize = sharedPreferences.getInt(KEY_TIME_SIZE, DEFAULT_TIME_SIZE)
+            timeSizeCached = true
+        }
+
+        return cacheTimeSize
+    }
+
+    override fun setTimeSize(timeSize: Int) {
+        cacheTimeSize = timeSize
+        timeSizeCached = true
+
+        sharedPreferences.edit().putInt(KEY_TIME_SIZE, timeSize).apply()
     }
 }

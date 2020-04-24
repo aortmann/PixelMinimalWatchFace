@@ -31,6 +31,7 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
+import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToScaleFactor
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
@@ -82,11 +83,13 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private var isRound: Boolean = false
     private lateinit var timeFormatter24H: SimpleDateFormat
     private lateinit var timeFormatter12H: SimpleDateFormat
+    private var currentTimeSize = 0
 
     override fun onCreate(context: Context, storage: Storage) {
         this.context = context
         this.storage = storage
 
+        currentTimeSize = storage.getTimeSize()
         wearOSLogoPaint = Paint()
         backgroundColor = ContextCompat.getColor(context, R.color.face_background)
         timeColor = ContextCompat.getColor(context, R.color.face_time)
@@ -111,22 +114,6 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     }
 
     override fun onApplyWindowInsets(insets: WindowInsets) {
-        timePaint.textSize = context.resources.getDimension(
-            if( insets.isRound ) {
-                R.dimen.time_text_size_round
-            } else {
-                R.dimen.time_text_size
-            }
-        )
-
-        datePaint.textSize = context.resources.getDimension(
-            if( insets.isRound ) {
-                R.dimen.date_text_size_round
-            } else {
-                R.dimen.date_text_size
-            }
-        )
-
         chinSize = insets.systemWindowInsetBottom
         isRound = insets.isRound
     }
@@ -209,6 +196,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val currentDrawingState = drawingState
         if( currentDrawingState is DrawingState.NoCacheAvailable ) {
             drawingState = currentDrawingState.buildCache()
+        } else if( currentDrawingState is DrawingState.CacheAvailable && currentTimeSize != storage.getTimeSize() ) {
+            drawingState = currentDrawingState.buildCache()
         }
 
         val drawingState = drawingState
@@ -218,6 +207,9 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     }
 
     private fun DrawingState.NoCacheAvailable.buildCache(): DrawingState.CacheAvailable {
+        val timeSize = storage.getTimeSize()
+        setTimeAndDatePaintSize(timeSize)
+
         val timeText = "22:13"
         val timeTextBounds = Rect().apply {
             timePaint.getTextBounds(timeText, 0, timeText.length, this)
@@ -234,6 +226,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             timeYOffset - timeTextBounds.height() - context.dpToPx(2),
             dateYOffset + dateTextBounds.height() / 2
         )
+
+        currentTimeSize = timeSize
 
         return DrawingState.CacheAvailable(
             screenWidth,
@@ -357,6 +351,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
     }
 
+    private fun DrawingState.CacheAvailable.buildCache(): DrawingState.CacheAvailable {
+        return DrawingState.NoCacheAvailable(screenWidth, screenHeight, centerX, centerY).buildCache()
+    }
+
     private fun drawBackground(canvas: Canvas) {
         canvas.drawColor(backgroundColor)
     }
@@ -384,6 +382,25 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
     }
 
+    private fun setTimeAndDatePaintSize(timeSize: Int) {
+        val scaleFactor = timeSizeToScaleFactor(timeSize)
+
+        timePaint.textSize = context.resources.getDimension(
+            if( isRound ) {
+                R.dimen.time_text_size_round
+            } else {
+                R.dimen.time_text_size
+            }
+        ) * scaleFactor
+
+        datePaint.textSize = context.resources.getDimension(
+            if( isRound ) {
+                R.dimen.date_text_size_round
+            } else {
+                R.dimen.date_text_size
+            }
+        ) * scaleFactor
+    }
 }
 
 private sealed class DrawingState {
