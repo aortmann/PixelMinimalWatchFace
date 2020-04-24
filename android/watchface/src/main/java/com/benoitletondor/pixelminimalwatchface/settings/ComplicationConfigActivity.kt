@@ -58,6 +58,8 @@ class ComplicationConfigActivity : Activity() {
             storage.setShouldShowComplicationsInAmbientMode(showComplicationsAmbient)
         }, { showFilledTimeAmbient ->
             storage.setShouldShowFilledTimeInAmbientMode(showFilledTimeAmbient)
+        }, { timeSize ->
+            storage.setTimeSize(timeSize)
         }, { showSecondsRing ->
             storage.setShouldShowSecondsRing(showSecondsRing)
         })

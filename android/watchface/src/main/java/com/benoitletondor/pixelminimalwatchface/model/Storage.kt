@@ -17,6 +17,7 @@ package com.benoitletondor.pixelminimalwatchface.model
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.benoitletondor.pixelminimalwatchface.helper.DEFAULT_TIME_SIZE
 
 private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 
@@ -30,6 +31,7 @@ private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
 private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
+private const val KEY_TIME_SIZE = "timeSize"
 private const val KEY_SECONDS_RING = "secondsRing"
 
 interface Storage {
@@ -50,6 +52,8 @@ interface Storage {
     fun setShouldShowComplicationsInAmbientMode(show: Boolean)
     fun shouldShowFilledTimeInAmbientMode(): Boolean
     fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
+    fun getTimeSize(): Int
+    fun setTimeSize(timeSize: Int)
     fun shouldShowSecondsRing(): Boolean
     fun setShouldShowSecondsRing(showSecondsRing: Boolean)
 }
@@ -62,6 +66,8 @@ class StorageImpl : Storage {
 
     // Those values will be called up to 60 times a minute when not in ambient mode
     // SharedPreferences uses a map so we cache the values to avoid map lookups
+    private var timeSizeCached = false
+    private var cacheTimeSize = 0
     private var isUserPremiumCached = false
     private var cacheIsUserPremium = false
     private var isUse24hFormatCached = false
@@ -209,6 +215,21 @@ class StorageImpl : Storage {
         sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
     }
 
+    override fun getTimeSize(): Int {
+        if( !timeSizeCached ) {
+            cacheTimeSize = sharedPreferences.getInt(KEY_TIME_SIZE, DEFAULT_TIME_SIZE)
+            timeSizeCached = true
+        }
+
+        return cacheTimeSize
+    }
+
+    override fun setTimeSize(timeSize: Int) {
+        cacheTimeSize = timeSize
+        timeSizeCached = true
+
+        sharedPreferences.edit().putInt(KEY_TIME_SIZE, timeSize).apply()
+    }
 
     override fun shouldShowSecondsRing(): Boolean {
         if( !shouldShowSecondsSettingCached ) {
