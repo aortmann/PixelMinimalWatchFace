@@ -14,14 +14,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<resources>
-    <dimen name="time_text_size">59dp</dimen>
-    <dimen name="time_text_size_round">62dp</dimen>
-    <dimen name="date_text_size">14dp</dimen>
-    <dimen name="date_text_size_round">14dp</dimen>
-    <dimen name="complication_title_size">12sp</dimen>
-    <dimen name="complication_text_size">14sp</dimen>
-
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-</resources>
+<Switch
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/config_list_show_seconds_ring_switch"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    style="@style/ButtonConfigurationStyle"
+    android:text="@string/config_show_seconds_ring"
+    android:drawableStart="@drawable/ic_baseline_panorama_fish_eye"/>

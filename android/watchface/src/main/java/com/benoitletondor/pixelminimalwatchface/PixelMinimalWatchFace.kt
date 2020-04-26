@@ -32,6 +32,7 @@ import android.os.Message
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationText
 import android.support.wearable.complications.rendering.ComplicationDrawable
+import android.support.wearable.complications.rendering.CustomComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
@@ -161,10 +162,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private fun initializeComplications() {
             complicationsColors = storage.getComplicationColors()
 
-            val leftComplicationDrawable = ComplicationDrawable(service)
-            val middleComplicationDrawable = ComplicationDrawable(service)
-            val rightComplicationDrawable = ComplicationDrawable(service)
-            val bottomComplicationDrawable = ComplicationDrawable(service)
+            val leftComplicationDrawable = CustomComplicationDrawable(service, false)
+            val middleComplicationDrawable = CustomComplicationDrawable(service, false)
+            val rightComplicationDrawable = CustomComplicationDrawable(service, false)
+            val bottomComplicationDrawable = CustomComplicationDrawable(service, true)
 
             complicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
             complicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
@@ -325,6 +326,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         @Suppress("SameParameterValue")
         private fun getNextComplicationUpdateDelay(): Long? {
+            if( storage.shouldShowSecondsRing() ) {
+                return 1000
+            }
+
             var minValue = Long.MAX_VALUE
 
             COMPLICATION_IDS.forEach { complicationId ->
@@ -484,8 +489,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationData.TYPE_LONG_TEXT,
                 ComplicationData.TYPE_SHORT_TEXT,
                 ComplicationData.TYPE_ICON,
-                ComplicationData.TYPE_SMALL_IMAGE,
-                ComplicationData.TYPE_RANGED_VALUE
+                ComplicationData.TYPE_SMALL_IMAGE
             )
         )
 

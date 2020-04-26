@@ -21,6 +21,10 @@ This is why I created Pixel Minimal Watch Face, with the secret hope that some f
 
 Part of this project is inspired by [Cole Gerdemann](https://github.com/CorvetteCole) work, please check his GitHub if you want to know more.
 
+### Contributors
+
+- [Jimmy Xiao](https://github.com/jimmyjxiao): seconds ring for round watches
+
 ### Contact
 
 You can contact me regarding Pixel Minimal Watch Face using this email: [pixelwatchface@benoitletondor.com](mailto:pixelwatchface@benoitletondor.com)

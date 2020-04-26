@@ -27,4 +27,5 @@
     <color name="complication_default_right_color">#da482f</color>
     <color name="complication_default_bottom_color">#54A74C</color>
     <color name="complication_title_color">#AAA</color>
+    <color name="transparent">#00000000</color>
 </resources>
