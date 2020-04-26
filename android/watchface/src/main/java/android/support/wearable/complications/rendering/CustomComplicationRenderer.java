@@ -46,6 +46,8 @@ import com.benoitletondor.pixelminimalwatchface.helper.ContextExtensionKt;
 
 import java.util.Objects;
 
+import static android.support.wearable.complications.ComplicationData.TYPE_RANGED_VALUE;
+import static android.support.wearable.complications.ComplicationData.TYPE_SHORT_TEXT;
 import static android.text.Layout.Alignment.ALIGN_CENTER;
 
 /**
@@ -71,8 +73,8 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
     private final RoundedDrawable mRoundedBackgroundDrawable = new RoundedDrawable();
     private final RoundedDrawable mRoundedLargeImage = new RoundedDrawable();
     private final RoundedDrawable mRoundedSmallImage = new RoundedDrawable();
-    private final TextRenderer mMainTextRenderer = new CustomTextRenderer();
-    private final TextRenderer mSubTextRenderer = new CustomTextRenderer();
+    private final TextRenderer mMainTextRenderer;
+    private final TextRenderer mSubTextRenderer;
     private final Rect mBackgroundBounds = new Rect();
     private final RectF mBackgroundBoundsF = new RectF();
     private final Rect mIconBounds = new Rect();
@@ -109,6 +111,8 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
         this.mIsWide = isWide;
         this.mTextPadding = ContextExtensionKt.dpToPx(context, 5);
         this.mMinHeightFor2LinesTextOnWideComplication = ContextExtensionKt.dpToPx(context, 25);
+        this.mMainTextRenderer = new CustomTextRenderer(mIsWide ? 13 : 7);
+        this.mSubTextRenderer = new CustomTextRenderer(mIsWide ? 13 : 7);
     }
 
     public void updateStyle(ComplicationStyle activeStyle, ComplicationStyle ambientStyle) {
@@ -196,7 +200,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 canvas.save();
                 canvas.translate((float)this.mBounds.left, (float)this.mBounds.top);
                 this.drawBackground(canvas, currentPaintSet);
-                this.drawIcon(canvas, currentPaintSet);
+                this.drawIcon(canvas, currentPaintSet, (this.mComplicationData.getType() == TYPE_SHORT_TEXT || this.mComplicationData.getType() == TYPE_RANGED_VALUE) && !mIsWide && this.mComplicationData.getShortText() != null);
                 this.drawSmallImage(canvas, currentPaintSet);
                 this.drawLargeImage(canvas, currentPaintSet);
                 this.drawRangedValue(canvas, currentPaintSet);
@@ -326,7 +330,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
         }
     }
 
-    private void drawIcon(Canvas canvas, ComplicationRenderer.PaintSet paintSet) {
+    private void drawIcon(Canvas canvas, ComplicationRenderer.PaintSet paintSet, boolean includeDelta) {
         if (!this.mIconBounds.isEmpty()) {
             Drawable icon = this.mIcon;
             if (icon != null) {
@@ -336,7 +340,9 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
 
                 icon.setColorFilter(paintSet.iconColorFilter);
 
-                drawIconOnCanvas(canvas, this.mIconBounds, icon);
+                int delta = includeDelta ? ContextExtensionKt.dpToPx(mContext, 2) : 0;
+
+                drawIconOnCanvas(canvas, this.mIconBounds, icon, delta);
             }
 
         }
@@ -382,10 +388,10 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
         }
     }
 
-    private static void drawIconOnCanvas(Canvas canvas, Rect bounds, Drawable icon) {
+    private static void drawIconOnCanvas(Canvas canvas, Rect bounds, Drawable icon, int delta) {
         icon.setBounds(0, 0, bounds.width(), bounds.height());
         canvas.save();
-        canvas.translate((float)bounds.left, (float)bounds.top);
+        canvas.translate((float)bounds.left, (float) bounds.top - delta);
         icon.draw(canvas);
         canvas.restore();
     }
@@ -455,7 +461,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 alignment = currentLayoutHelper.getShortTextAlignment();
                 currentLayoutHelper.getShortTextBounds(this.mMainTextBounds);
                 this.mMainTextRenderer.setAlignment(mIsWide ? ALIGN_CENTER : alignment);
-                this.mMainTextRenderer.setGravity(currentLayoutHelper.getShortTextGravity());
+                this.mMainTextRenderer.setGravity((!mIsWide && mComplicationData.getType() == TYPE_SHORT_TEXT && mComplicationData.getIcon() != null && mComplicationData.getShortTitle() != null) ? Gravity.BOTTOM : currentLayoutHelper.getShortTextGravity());
                 currentLayoutHelper.getShortTitleBounds(this.mSubTextBounds);
                 this.mSubTextRenderer.setAlignment(mIsWide ? ALIGN_CENTER : currentLayoutHelper.getShortTitleAlignment());
                 this.mSubTextRenderer.setGravity(16);
@@ -493,7 +499,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 if( mIsWide ) {
                     LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 0.75F);
                 } else {
-                    LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 1.0F);
+                    LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 1.1F);
                     LayoutUtils.fitSquareToBounds(this.mIconBounds, innerBounds);
                 }
             }

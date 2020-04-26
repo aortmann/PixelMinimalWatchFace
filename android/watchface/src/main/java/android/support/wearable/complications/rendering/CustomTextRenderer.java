@@ -69,12 +69,13 @@ public class CustomTextRenderer extends TextRenderer {
     private boolean mNeedUpdateLayout;
     private boolean mNeedCalculateBounds;
 
-    public CustomTextRenderer() {
+    public CustomTextRenderer(int minCharactersShown) {
         this.mEllipsize = TextUtils.TruncateAt.END;
         this.mAlignment = Layout.Alignment.ALIGN_CENTER;
         this.mWorkingRect = new Rect();
         this.mOutputRect = new Rect();
         this.mInAmbientMode = false;
+        this.mMinCharactersShown = minCharactersShown;
     }
 
     public void draw(Canvas canvas, Rect bounds) {
