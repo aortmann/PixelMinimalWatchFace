@@ -490,7 +490,12 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
             }
 
             if (!this.mIconBounds.isEmpty()) {
-                LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 0.80F);
+                if( mIsWide ) {
+                    LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 0.75F);
+                } else {
+                    LayoutUtils.scaledAroundCenter(this.mIconBounds, this.mIconBounds, 1.0F);
+                    LayoutUtils.fitSquareToBounds(this.mIconBounds, innerBounds);
+                }
             }
 
             if (!this.mSmallImageBounds.isEmpty()) {
