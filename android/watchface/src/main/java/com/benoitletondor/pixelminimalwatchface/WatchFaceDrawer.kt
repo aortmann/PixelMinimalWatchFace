@@ -169,9 +169,15 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                           complicationColors: ComplicationColors) {
         val primaryComplicationColor = getComplicationPrimaryColor(complicationId, complicationColors)
         if( data != null && data.icon != null ) {
-            complicationDrawable.setTextColorActive(complicationTitleColor)
-            complicationDrawable.setTextColorAmbient(complicationTitleColor)
-            if( complicationId != BOTTOM_COMPLICATION_ID ) {
+            if( complicationId == BOTTOM_COMPLICATION_ID && ( data.longTitle != null ) ) {
+                complicationDrawable.setTextColorActive(primaryComplicationColor)
+                complicationDrawable.setTextColorAmbient(dateColorDimmed)
+            } else {
+                complicationDrawable.setTextColorActive(complicationTitleColor)
+                complicationDrawable.setTextColorAmbient(complicationTitleColor)
+            }
+
+            if( complicationId != BOTTOM_COMPLICATION_ID && data.shortTitle == null ) {
                 complicationDrawable.setTextSizeActive(titleSize)
                 complicationDrawable.setTextSizeAmbient(titleSize)
             } else {

@@ -73,8 +73,8 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
     private final RoundedDrawable mRoundedBackgroundDrawable = new RoundedDrawable();
     private final RoundedDrawable mRoundedLargeImage = new RoundedDrawable();
     private final RoundedDrawable mRoundedSmallImage = new RoundedDrawable();
-    private final TextRenderer mMainTextRenderer = new CustomTextRenderer();
-    private final TextRenderer mSubTextRenderer = new CustomTextRenderer();
+    private final TextRenderer mMainTextRenderer;
+    private final TextRenderer mSubTextRenderer;
     private final Rect mBackgroundBounds = new Rect();
     private final RectF mBackgroundBoundsF = new RectF();
     private final Rect mIconBounds = new Rect();
@@ -111,6 +111,8 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
         this.mIsWide = isWide;
         this.mTextPadding = ContextExtensionKt.dpToPx(context, 5);
         this.mMinHeightFor2LinesTextOnWideComplication = ContextExtensionKt.dpToPx(context, 25);
+        this.mMainTextRenderer = new CustomTextRenderer(mIsWide ? 15 : 7);
+        this.mSubTextRenderer = new CustomTextRenderer(mIsWide ? 15 : 7);
     }
 
     public void updateStyle(ComplicationStyle activeStyle, ComplicationStyle ambientStyle) {
@@ -198,7 +200,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 canvas.save();
                 canvas.translate((float)this.mBounds.left, (float)this.mBounds.top);
                 this.drawBackground(canvas, currentPaintSet);
-                this.drawIcon(canvas, currentPaintSet, (this.mComplicationData.getType() == TYPE_SHORT_TEXT || this.mComplicationData.getType() == TYPE_RANGED_VALUE) && !mIsWide);
+                this.drawIcon(canvas, currentPaintSet, (this.mComplicationData.getType() == TYPE_SHORT_TEXT || this.mComplicationData.getType() == TYPE_RANGED_VALUE) && !mIsWide && this.mComplicationData.getShortText() != null);
                 this.drawSmallImage(canvas, currentPaintSet);
                 this.drawLargeImage(canvas, currentPaintSet);
                 this.drawRangedValue(canvas, currentPaintSet);
@@ -459,7 +461,7 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
                 alignment = currentLayoutHelper.getShortTextAlignment();
                 currentLayoutHelper.getShortTextBounds(this.mMainTextBounds);
                 this.mMainTextRenderer.setAlignment(mIsWide ? ALIGN_CENTER : alignment);
-                this.mMainTextRenderer.setGravity(currentLayoutHelper.getShortTextGravity());
+                this.mMainTextRenderer.setGravity((!mIsWide && mComplicationData.getType() == TYPE_SHORT_TEXT && mComplicationData.getIcon() != null && mComplicationData.getShortTitle() != null) ? Gravity.BOTTOM : currentLayoutHelper.getShortTextGravity());
                 currentLayoutHelper.getShortTitleBounds(this.mSubTextBounds);
                 this.mSubTextRenderer.setAlignment(mIsWide ? ALIGN_CENTER : currentLayoutHelper.getShortTitleAlignment());
                 this.mSubTextRenderer.setGravity(16);
