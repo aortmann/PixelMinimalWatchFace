@@ -111,8 +111,8 @@ public class CustomComplicationRenderer extends ComplicationRenderer {
         this.mIsWide = isWide;
         this.mTextPadding = ContextExtensionKt.dpToPx(context, 5);
         this.mMinHeightFor2LinesTextOnWideComplication = ContextExtensionKt.dpToPx(context, 25);
-        this.mMainTextRenderer = new CustomTextRenderer(mIsWide ? 15 : 7);
-        this.mSubTextRenderer = new CustomTextRenderer(mIsWide ? 15 : 7);
+        this.mMainTextRenderer = new CustomTextRenderer(mIsWide ? 13 : 7);
+        this.mSubTextRenderer = new CustomTextRenderer(mIsWide ? 13 : 7);
     }
 
     public void updateStyle(ComplicationStyle activeStyle, ComplicationStyle ambientStyle) {
