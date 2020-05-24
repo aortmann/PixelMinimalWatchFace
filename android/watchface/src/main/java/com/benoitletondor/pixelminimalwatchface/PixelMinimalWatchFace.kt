@@ -180,7 +180,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             rightComplicationDrawable.callback = this
             bottomComplicationDrawable.callback = this
 
-            setActiveComplications(*COMPLICATION_IDS)
+            setActiveComplications(*COMPLICATION_IDS.plus(WEATHER_COMPLICATION_ID))
 
             watchFaceDrawer.setComplicationDrawable(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(MIDDLE_COMPLICATION_ID, middleComplicationDrawable)
@@ -458,6 +458,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         const val RIGHT_COMPLICATION_ID = 101
         const val MIDDLE_COMPLICATION_ID = 102
         const val BOTTOM_COMPLICATION_ID = 103
+        const val WEATHER_COMPLICATION_ID = 104
 
         private val COMPLICATION_IDS = intArrayOf(
             LEFT_COMPLICATION_ID,
@@ -490,6 +491,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationData.TYPE_SHORT_TEXT,
                 ComplicationData.TYPE_ICON,
                 ComplicationData.TYPE_SMALL_IMAGE
+            ),
+            intArrayOf(
+                ComplicationData.TYPE_SHORT_TEXT,
+                ComplicationData.TYPE_ICON
             )
         )
 

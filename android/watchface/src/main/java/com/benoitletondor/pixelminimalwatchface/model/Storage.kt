@@ -33,6 +33,7 @@ private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
 private const val KEY_TIME_SIZE = "timeSize"
 private const val KEY_SECONDS_RING = "secondsRing"
+private const val KEY_SHOW_WEATHER = "showWeather"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -56,6 +57,8 @@ interface Storage {
     fun setTimeSize(timeSize: Int)
     fun shouldShowSecondsRing(): Boolean
     fun setShouldShowSecondsRing(showSecondsRing: Boolean)
+    fun shouldShowWeather(): Boolean
+    fun setShouldShowWeather(show: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -78,6 +81,8 @@ class StorageImpl : Storage {
     private var cacheShouldShowComplicationsInAmbientMode = false
     private var shouldShowSecondsSettingCached = false
     private var cacheShouldShowSecondsSetting = false
+    private var shouldShowWeatherCached = false
+    private var cacheShouldShowWeather = false
 
     fun init(context: Context): Storage {
         if( !initialized ) {
@@ -125,7 +130,7 @@ class StorageImpl : Storage {
 
     override fun isUserPremium(): Boolean {
         if( !isUserPremiumCached ) {
-            cacheIsUserPremium = sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+            cacheIsUserPremium = true//sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
             isUserPremiumCached = true
         }
 
@@ -245,5 +250,21 @@ class StorageImpl : Storage {
         shouldShowSecondsSettingCached = true
 
         sharedPreferences.edit().putBoolean(KEY_SECONDS_RING, showSecondsRing).apply()
+    }
+
+    override fun shouldShowWeather(): Boolean {
+        if( !shouldShowWeatherCached ) {
+            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, false)
+            shouldShowWeatherCached = true
+        }
+
+        return cacheShouldShowWeather
+    }
+
+    override fun setShouldShowWeather(show: Boolean) {
+        cacheShouldShowWeather = show
+        shouldShowWeatherCached = true
+
+        sharedPreferences.edit().putBoolean(KEY_SHOW_WEATHER, show).apply()
     }
 }

@@ -19,6 +19,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.support.wearable.complications.ComplicationHelperActivity
@@ -29,6 +30,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.benoitletondor.pixelminimalwatchface.BuildConfig
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace
@@ -54,6 +56,7 @@ private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
 private const val TYPE_TIME_SIZE = 10
 private const val TYPE_SHOW_SECONDS_RING = 11
+private const val TYPE_SHOW_WEATHER = 12
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -65,7 +68,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val showComplicationsAmbientListener: (Boolean) -> Unit,
     private val showFilledTimeAmbientListener: (Boolean) -> Unit,
     private val timeSizeChangedListener: (Int) -> Unit,
-    private val showSecondsRingListener: (Boolean) -> Unit
+    private val showSecondsRingListener: (Boolean) -> Unit,
+    private val showWeatherListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -73,6 +77,7 @@ class ComplicationConfigRecyclerViewAdapter(
     private val watchFaceComponentName = ComponentName(context, PixelMinimalWatchFace::class.java)
     private val providerInfoRetriever = ProviderInfoRetriever(context, Executors.newCachedThreadPool())
     private var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder? = null
+    private var showWeatherViewHolder: ShowWeatherViewHolder? = null
     private val settings = generateSettingsList(context, storage)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -187,6 +192,29 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 showSecondsRingListener
             )
+            TYPE_SHOW_WEATHER -> {
+                val showWeatherViewHolder = ShowWeatherViewHolder(
+                    LayoutInflater.from(parent.context).inflate(
+                        R.layout.config_list_show_weather,
+                        parent,
+                        false
+                    )
+                ) { showWeather ->
+                    if( showWeather ) {
+                        (context as Activity).startActivityForResult(
+                            ComplicationHelperActivity.createPermissionRequestHelperIntent(
+                                context,
+                                watchFaceComponentName
+                            ),
+                            ComplicationConfigActivity.COMPLICATION_PERMISSION_REQUEST_CODE
+                        )
+                    } else {
+                        showWeatherListener(false)
+                    }
+                }
+                this.showWeatherViewHolder = showWeatherViewHolder
+                return showWeatherViewHolder
+            }
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -230,6 +258,10 @@ class ComplicationConfigRecyclerViewAdapter(
                 val showSeconds = storage.shouldShowSecondsRing()
                 (viewHolder as ShowSecondsRingViewHolder).setShowSecondsRingSwitchChecked(showSeconds)
             }
+            TYPE_SHOW_WEATHER -> {
+                val showWeather = storage.shouldShowWeather()
+                (viewHolder as ShowWeatherViewHolder).setShowWeatherViewSwitchChecked(showWeather)
+            }
         }
     }
 
@@ -271,6 +303,7 @@ class ComplicationConfigRecyclerViewAdapter(
         if( isUserPremium ) {
             list.add(TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG)
             list.add(TYPE_COLOR_CONFIG)
+            list.add(TYPE_SHOW_WEATHER)
         } else {
             list.add(TYPE_BECOME_PREMIUM)
         }
@@ -321,6 +354,14 @@ class ComplicationConfigRecyclerViewAdapter(
 
     fun updatePreviewColors() {
         previewAndComplicationsViewHolder?.updateComplicationsAccentColor(storage.getComplicationColors())
+    }
+
+
+    fun complicationsPermissionFinished() {
+        val granted = ContextCompat.checkSelfPermission(context, "com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA") == PackageManager.PERMISSION_GRANTED
+
+        showWeatherViewHolder?.setShowWeatherViewSwitchChecked(granted)
+        showWeatherListener(granted)
     }
 }
 
@@ -607,7 +648,7 @@ class TimeSizeViewHolder(view: View,
 }
 
 class ShowSecondsRingViewHolder(view: View,
-                                      showSecondsRingClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+                                showSecondsRingClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
     private val showSecondsRingSwitch: Switch = view as Switch
 
     init {
@@ -618,5 +659,20 @@ class ShowSecondsRingViewHolder(view: View,
 
     fun setShowSecondsRingSwitchChecked(checked: Boolean) {
         showSecondsRingSwitch.isChecked = checked
+    }
+}
+
+class ShowWeatherViewHolder(view: View,
+                            showWeatherViewHolderClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showWeatherViewSwitch: Switch = view as Switch
+
+    init {
+        showWeatherViewSwitch.setOnCheckedChangeListener { _, checked ->
+            showWeatherViewHolderClickListener(checked)
+        }
+    }
+
+    fun setShowWeatherViewSwitchChecked(checked: Boolean) {
+        showWeatherViewSwitch.isChecked = checked
     }
 }
