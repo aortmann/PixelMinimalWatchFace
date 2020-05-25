@@ -24,7 +24,7 @@
     <string name="premium_error">Unable to reach PlayStore to verify your premium status.\n\nPlease check your connection and try again.\n(%s)</string>
     <string name="error_retry_cta">Retry</string>
     <string name="syncing_premium_status">Syncing with watch…</string>
-    <string name="not_premium_status">To enable widgets on your watch face, become a premium user:</string>
+    <string name="not_premium_status">You can use the watch face for free.\nTo unlock widgets, become a premium user:</string>
     <string name="not_premium_status_2">(1 time payment, no hidden fees)</string>
     <string name="premium_cta">Become premium</string>
     <string name="promocode_cta">Redeem code</string>
@@ -48,6 +48,6 @@
     <string name="premium_3_title">Pick the widgets accent color</string>
     <string name="sync_succeed_message">Sync done! Check your watch.</string>
     <string name="onboarding_title">Welcome into Pixel Minimal Watch Face companion app</string>
-    <string name="onboarding_text">Buy premium mode and unlock widgets for your watch.\n\nIf you have any issue, please contact me using the app menu for support.</string>
+    <string name="onboarding_text">Download Pixel Minimal Watch Face on your watch first, for free.\nUse this phone app if you want to buy premium mode and unlock widgets.\n\nIf you have any issue, please contact me using the app menu for support.</string>
     <string name="onboarding_finish_cta">Let\'s go</string>
 </resources>
