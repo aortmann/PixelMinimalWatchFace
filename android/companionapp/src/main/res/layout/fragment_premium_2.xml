@@ -38,7 +38,7 @@
     <ImageView
         android:id="@+id/premium_2_image_view"
         android:layout_width="0dp"
-        android:layout_height="300dp"
+        android:layout_height="280dp"
         android:src="@drawable/widgets"
         android:scaleType="fitCenter"
         android:layout_marginTop="16dp"
