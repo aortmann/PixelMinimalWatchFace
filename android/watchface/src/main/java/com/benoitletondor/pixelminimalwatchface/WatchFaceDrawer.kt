@@ -414,22 +414,22 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val dateXOffset = centerX - (dateTextLength / 2f) - weatherTextLength / 2f - weatherIconSize / 2f - spaceBeforeWeather
 
+        weatherIconRect.left = (dateXOffset + dateTextLength + spaceBeforeWeather).toInt()
+        weatherIconRect.top = (dateYOffset - weatherIconSize + dateFontMetrics.descent).toInt()
+        weatherIconRect.right = (dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather).toInt()
+        weatherIconRect.bottom = (dateYOffset + dateFontMetrics.descent).toInt()
+
         val cachedWeatherIcon = this@WatchFaceDrawerImpl.currentWeatherIcon
         val cachedWeatherBitmap = this@WatchFaceDrawerImpl.currentWeatherBitmap
         val weatherIconBitmap = if ( cachedWeatherIcon != null && cachedWeatherBitmap != null && weatherIcon.sameAs(cachedWeatherIcon) ) {
                 cachedWeatherBitmap
         } else {
-            val bitmap = weatherIcon.loadDrawable(context).toBitmap()
+            val bitmap = weatherIcon.loadDrawable(context).toBitmap(weatherIconRect.right - weatherIconRect.left, weatherIconRect.bottom - weatherIconRect.top)
             this@WatchFaceDrawerImpl.currentWeatherBitmap = bitmap
             this@WatchFaceDrawerImpl.currentWeatherIcon = weatherIcon
 
             bitmap
         }
-
-        weatherIconRect.left = (dateXOffset + dateTextLength + spaceBeforeWeather).toInt()
-        weatherIconRect.top = (dateYOffset - weatherIconSize + dateFontMetrics.descent).toInt()
-        weatherIconRect.right = (dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather).toInt()
-        weatherIconRect.bottom = (dateYOffset + dateFontMetrics.descent).toInt()
 
         canvas.drawText(
             weatherTextString,
