@@ -39,6 +39,7 @@ import android.view.WindowInsets
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.benoitletondor.pixelminimalwatchface.helper.isPermissionGranted
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
@@ -75,7 +76,12 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
     @Suppress("SameParameterValue", "UNUSED_PARAMETER")
     private fun onAppUpgrade(oldVersion: Int, newVersion: Int) {
-        // No-op
+        if( oldVersion <= 23 ) {
+            val storage = Injection.storage(this)
+            storage.setShouldShowWeather(
+                storage.isUserPremium() && isPermissionGranted("com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA")
+            )
+        }
     }
 
     private class ComplicationTimeDependentUpdateHandler(private val engine: WeakReference<Engine>,
@@ -135,7 +141,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private val timeDependentUpdateHandler = ComplicationTimeDependentUpdateHandler(WeakReference(this))
         private val timeDependentTexts = SparseArray<ComplicationText>()
 
-        private var shouldShowWeather = storage.shouldShowWeather()
+        private var shouldShowWeather = false
         private var weatherComplicationData: ComplicationData? = null
 
         private val timeZoneReceiver = object : BroadcastReceiver() {
@@ -160,10 +166,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             initializeComplications()
 
             Wearable.getDataClient(service).addListener(this)
-
-            if( shouldShowWeather ) {
-                subscribeToWeatherComplicationData()
-            }
         }
 
         private fun initializeComplications() {
@@ -340,7 +342,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             // Update weather subscription if needed
-            if( storage.shouldShowWeather() != shouldShowWeather ) {
+            if( storage.shouldShowWeather() != shouldShowWeather && storage.isUserPremium() ) {
                 if( storage.shouldShowWeather() ) {
                     subscribeToWeatherComplicationData()
                 } else {

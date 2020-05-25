@@ -254,7 +254,7 @@ class StorageImpl : Storage {
 
     override fun shouldShowWeather(): Boolean {
         if( !shouldShowWeatherCached ) {
-            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, true)
+            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, false)
             shouldShowWeatherCached = true
         }
 

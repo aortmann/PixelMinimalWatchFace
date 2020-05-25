@@ -19,7 +19,6 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.support.wearable.complications.ComplicationHelperActivity
@@ -30,12 +29,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.benoitletondor.pixelminimalwatchface.*
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationId
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationIds
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getSupportedComplicationTypes
+import com.benoitletondor.pixelminimalwatchface.helper.isPermissionGranted
 import com.benoitletondor.pixelminimalwatchface.helper.isScreenRound
 import com.benoitletondor.pixelminimalwatchface.helper.isServiceAvailable
 import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToHumanReadableString
@@ -360,7 +359,7 @@ class ComplicationConfigRecyclerViewAdapter(
 
 
     fun complicationsPermissionFinished() {
-        val granted = ContextCompat.checkSelfPermission(context, "com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA") == PackageManager.PERMISSION_GRANTED
+        val granted = context.isPermissionGranted("com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA")
 
         showWeatherViewHolder?.setShowWeatherViewSwitchChecked(granted)
         showWeatherListener(granted)
