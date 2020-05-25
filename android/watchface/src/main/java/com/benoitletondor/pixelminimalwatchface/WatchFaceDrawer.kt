@@ -73,6 +73,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var timePaint: Paint
     private lateinit var datePaint: Paint
     private lateinit var weatherIconPaint: Paint
+    private lateinit var weatherIconColorFilter: ColorFilter
+    private lateinit var weatherIconColorFilterDimmed: ColorFilter
     private lateinit var secondsRingPaint: Paint
     @ColorInt private var backgroundColor: Int = 0
     @ColorInt private var timeColor: Int = 0
@@ -92,8 +94,6 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private var currentTimeSize = 0
     private val secondsCalendar = Calendar.getInstance()
     private var spaceBeforeWeather = 0
-    private var currentWeatherIcon: Icon? = null
-    private var currentWeatherBitmap: Bitmap? = null
     private val weatherIconRect = Rect()
 
     override fun onCreate(context: Context, storage: Storage) {
@@ -124,6 +124,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             typeface = productSansRegularFont
         }
         weatherIconPaint = Paint()
+        weatherIconColorFilter = PorterDuffColorFilter(dateColor, PorterDuff.Mode.SRC_IN)
+        weatherIconColorFilterDimmed = PorterDuffColorFilter(dateColorDimmed, PorterDuff.Mode.SRC_IN)
         secondsRingPaint = Paint().apply {
             style = Paint.Style.STROKE
             color = Color.WHITE
@@ -377,7 +379,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
         val dateTextLength = datePaint.measureText(dateText)
-        val dateXOffset = if( weatherComplicationData != null ) {
+        val dateXOffset = if( isUserPremium && weatherComplicationData != null ) {
             val weatherText = weatherComplicationData.shortText
             val weatherIcon = weatherComplicationData.icon
 
@@ -412,21 +414,21 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val weatherTextLength = datePaint.measureText(weatherTextString)
         val dateFontMetrics = datePaint.fontMetrics
 
-        val dateXOffset = centerX - (dateTextLength / 2f) - weatherTextLength / 2f - weatherIconSize / 2f - spaceBeforeWeather
+        val dateXOffset = centerX - (dateTextLength / 2f) - weatherTextLength / 2f - weatherIconSize / 2f - spaceBeforeWeather - dateFontMetrics.descent / 4f
 
         weatherIconRect.left = (dateXOffset + dateTextLength + spaceBeforeWeather).toInt()
-        weatherIconRect.top = (dateYOffset - weatherIconSize + dateFontMetrics.descent).toInt()
-        weatherIconRect.right = (dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather).toInt()
+        weatherIconRect.top = (dateYOffset - weatherIconSize + dateFontMetrics.descent / 2f).toInt()
+        weatherIconRect.right = (dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather + dateFontMetrics.descent / 2f).toInt()
         weatherIconRect.bottom = (dateYOffset + dateFontMetrics.descent).toInt()
 
-        val cachedWeatherIcon = this@WatchFaceDrawerImpl.currentWeatherIcon
-        val cachedWeatherBitmap = this@WatchFaceDrawerImpl.currentWeatherBitmap
+        val cachedWeatherIcon = this.currentWeatherIcon
+        val cachedWeatherBitmap = this.currentWeatherBitmap
         val weatherIconBitmap = if ( cachedWeatherIcon != null && cachedWeatherBitmap != null && weatherIcon.sameAs(cachedWeatherIcon) ) {
-                cachedWeatherBitmap
+            cachedWeatherBitmap
         } else {
             val bitmap = weatherIcon.loadDrawable(context).toBitmap(weatherIconRect.right - weatherIconRect.left, weatherIconRect.bottom - weatherIconRect.top)
-            this@WatchFaceDrawerImpl.currentWeatherBitmap = bitmap
-            this@WatchFaceDrawerImpl.currentWeatherIcon = weatherIcon
+            currentWeatherBitmap = bitmap
+            currentWeatherIcon = weatherIcon
 
             bitmap
         }
@@ -487,7 +489,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
 
-        weatherIconPaint.isAntiAlias = !ambient
+        weatherIconPaint.apply {
+            isAntiAlias = !ambient
+            colorFilter = if( ambient ) { weatherIconColorFilterDimmed } else { weatherIconColorFilter }
+        }
     }
 
     private fun Context.dpToPx(dp: Int): Int {
@@ -531,7 +536,9 @@ private sealed class DrawingState {
                               val timeYOffset: Float,
                               val dateHeight: Int,
                               val dateYOffset: Float,
-                              val complicationsDrawingCache: ComplicationsDrawingCache) : DrawingState()
+                              val complicationsDrawingCache: ComplicationsDrawingCache,
+                              var currentWeatherIcon: Icon? = null,
+                              var currentWeatherBitmap: Bitmap? = null) : DrawingState()
 }
 
 private data class ComplicationsDrawingCache(
