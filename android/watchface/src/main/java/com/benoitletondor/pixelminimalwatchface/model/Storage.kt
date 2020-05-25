@@ -130,7 +130,7 @@ class StorageImpl : Storage {
 
     override fun isUserPremium(): Boolean {
         if( !isUserPremiumCached ) {
-            cacheIsUserPremium = true//sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+            cacheIsUserPremium = sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
             isUserPremiumCached = true
         }
 
@@ -254,7 +254,7 @@ class StorageImpl : Storage {
 
     override fun shouldShowWeather(): Boolean {
         if( !shouldShowWeatherCached ) {
-            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, false)
+            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, true)
             shouldShowWeatherCached = true
         }
 

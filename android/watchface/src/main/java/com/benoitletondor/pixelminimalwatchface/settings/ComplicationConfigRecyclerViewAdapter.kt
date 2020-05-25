@@ -32,13 +32,12 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.benoitletondor.pixelminimalwatchface.BuildConfig
-import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace
+import com.benoitletondor.pixelminimalwatchface.*
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationId
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationIds
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getSupportedComplicationTypes
-import com.benoitletondor.pixelminimalwatchface.R
 import com.benoitletondor.pixelminimalwatchface.helper.isScreenRound
+import com.benoitletondor.pixelminimalwatchface.helper.isServiceAvailable
 import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToHumanReadableString
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
@@ -303,7 +302,10 @@ class ComplicationConfigRecyclerViewAdapter(
         if( isUserPremium ) {
             list.add(TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG)
             list.add(TYPE_COLOR_CONFIG)
-            list.add(TYPE_SHOW_WEATHER)
+
+            if( context.isServiceAvailable(WEAR_OS_APP_PACKAGE, WEATHER_PROVIDER_SERVICE) ) {
+                list.add(TYPE_SHOW_WEATHER)
+            }
         } else {
             list.add(TYPE_BECOME_PREMIUM)
         }

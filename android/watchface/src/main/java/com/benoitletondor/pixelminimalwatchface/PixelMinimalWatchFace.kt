@@ -18,10 +18,7 @@ package com.benoitletondor.pixelminimalwatchface
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
@@ -55,6 +52,9 @@ private const val MISC_NOTIFICATION_CHANNEL_ID = "rating"
 private const val DATA_KEY_PREMIUM = "premium"
 private const val THREE_DAYS_MS: Long = 1000 * 60 * 60 * 24 * 3
 private const val MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS = 1000L
+
+const val WEAR_OS_APP_PACKAGE = "com.google.android.wearable.app"
+const val WEATHER_PROVIDER_SERVICE = "com.google.android.clockwork.home.weather.WeatherProviderService"
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
@@ -135,6 +135,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private val timeDependentUpdateHandler = ComplicationTimeDependentUpdateHandler(WeakReference(this))
         private val timeDependentTexts = SparseArray<ComplicationText>()
 
+        private var shouldShowWeather = storage.shouldShowWeather()
+        private var weatherComplicationData: ComplicationData? = null
+
         private val timeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 calendar.timeZone = TimeZone.getDefault()
@@ -157,6 +160,10 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             initializeComplications()
 
             Wearable.getDataClient(service).addListener(this)
+
+            if( shouldShowWeather ) {
+                subscribeToWeatherComplicationData()
+            }
         }
 
         private fun initializeComplications() {
@@ -187,6 +194,22 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             watchFaceDrawer.setComplicationDrawable(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
             watchFaceDrawer.setComplicationDrawable(BOTTOM_COMPLICATION_ID, bottomComplicationDrawable)
             watchFaceDrawer.onComplicationColorsUpdate(complicationsColors, complicationDataSparseArray)
+        }
+
+        private fun subscribeToWeatherComplicationData() {
+            setDefaultComplicationProvider(
+                WEATHER_COMPLICATION_ID,
+                ComponentName(WEAR_OS_APP_PACKAGE, WEATHER_PROVIDER_SERVICE),
+                ComplicationData.TYPE_SHORT_TEXT
+            )
+        }
+
+        private fun unsubscribeToWeatherComplicationData() {
+            setDefaultComplicationProvider(
+                WEATHER_COMPLICATION_ID,
+                null,
+                ComplicationData.TYPE_EMPTY
+            )
         }
 
         override fun onDestroy() {
@@ -267,6 +290,17 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData) {
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
 
+            if( watchFaceComplicationId == WEATHER_COMPLICATION_ID ) {
+                weatherComplicationData = if( data.type == ComplicationData.TYPE_SHORT_TEXT ) {
+                    data
+                } else {
+                    null
+                }
+
+                invalidate()
+                return
+            }
+
             // Updates correct ComplicationDrawable with updated data.
             val complicationDrawable = complicationDrawableSparseArray.get(watchFaceComplicationId)
             complicationDrawable.setComplicationData(data)
@@ -305,6 +339,18 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
+            // Update weather subscription if needed
+            if( storage.shouldShowWeather() != shouldShowWeather ) {
+                if( storage.shouldShowWeather() ) {
+                    subscribeToWeatherComplicationData()
+                } else {
+                    unsubscribeToWeatherComplicationData()
+                    weatherComplicationData = null
+                }
+
+                shouldShowWeather = storage.shouldShowWeather()
+            }
+
             calendar.timeInMillis = System.currentTimeMillis()
 
             watchFaceDrawer.draw(
@@ -313,7 +359,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 muteMode,
                 ambient,
                 lowBitAmbient,
-                burnInProtection
+                burnInProtection,
+                weatherComplicationData
             )
 
             if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {
@@ -491,10 +538,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ComplicationData.TYPE_SHORT_TEXT,
                 ComplicationData.TYPE_ICON,
                 ComplicationData.TYPE_SMALL_IMAGE
-            ),
-            intArrayOf(
-                ComplicationData.TYPE_SHORT_TEXT,
-                ComplicationData.TYPE_ICON
             )
         )
 

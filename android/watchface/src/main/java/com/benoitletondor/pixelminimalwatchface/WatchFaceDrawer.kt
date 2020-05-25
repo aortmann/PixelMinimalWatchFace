@@ -17,7 +17,9 @@ package com.benoitletondor.pixelminimalwatchface
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.Icon
 import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.ComplicationText
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.text.format.DateUtils.*
 import android.util.ArrayMap
@@ -31,6 +33,7 @@ import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.LEFT_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.MIDDLE_COMPLICATION_ID
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.RIGHT_COMPLICATION_ID
+import com.benoitletondor.pixelminimalwatchface.helper.sameAs
 import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToScaleFactor
 import com.benoitletondor.pixelminimalwatchface.helper.toBitmap
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
@@ -56,7 +59,8 @@ interface WatchFaceDrawer {
              muteMode: Boolean,
              ambient:Boolean,
              lowBitAmbient: Boolean,
-             burnInProtection: Boolean)
+             burnInProtection: Boolean,
+             weatherComplicationData: ComplicationData?)
 }
 
 class WatchFaceDrawerImpl : WatchFaceDrawer {
@@ -68,6 +72,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var wearOSLogoPaint: Paint
     private lateinit var timePaint: Paint
     private lateinit var datePaint: Paint
+    private lateinit var weatherIconPaint: Paint
     private lateinit var secondsRingPaint: Paint
     @ColorInt private var backgroundColor: Int = 0
     @ColorInt private var timeColor: Int = 0
@@ -86,6 +91,10 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private lateinit var timeFormatter12H: SimpleDateFormat
     private var currentTimeSize = 0
     private val secondsCalendar = Calendar.getInstance()
+    private var spaceBeforeWeather = 0
+    private var currentWeatherIcon: Icon? = null
+    private var currentWeatherBitmap: Bitmap? = null
+    private val weatherIconRect = Rect()
 
     override fun onCreate(context: Context, storage: Storage) {
         this.context = context
@@ -106,6 +115,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         timeFormatter12H = SimpleDateFormat("h:mm", Locale.getDefault())
         titleSize = context.resources.getDimensionPixelSize(R.dimen.complication_title_size)
         textSize = context.resources.getDimensionPixelSize(R.dimen.complication_text_size)
+        spaceBeforeWeather = context.dpToPx(5)
         timePaint = Paint().apply {
             typeface = productSansRegularFont
             strokeWidth = 1.5f
@@ -113,6 +123,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         datePaint = Paint().apply {
             typeface = productSansRegularFont
         }
+        weatherIconPaint = Paint()
         secondsRingPaint = Paint().apply {
             style = Paint.Style.STROKE
             color = Color.WHITE
@@ -207,7 +218,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                       muteMode: Boolean,
                       ambient:Boolean,
                       lowBitAmbient: Boolean,
-                      burnInProtection: Boolean) {
+                      burnInProtection: Boolean,
+                      weatherComplicationData: ComplicationData?) {
 
         setPaintVariables(muteMode, ambient, lowBitAmbient, burnInProtection)
         drawBackground(canvas)
@@ -228,7 +240,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                 lowBitAmbient,
                 burnInProtection,
                 storage.isUserPremium(),
-                storage.shouldShowSecondsRing()
+                storage.shouldShowSecondsRing(),
+                weatherComplicationData
             )
         }
     }
@@ -244,14 +257,14 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         val timeYOffset = centerY + (timeTextBounds.height() / 2.0f ) - 5f
 
         val dateText = "May, 15"
-        val dateTextBounds = Rect().apply {
+        val dateTextHeight = Rect().apply {
             datePaint.getTextBounds(dateText, 0, dateText.length, this)
-        }
-        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextBounds.height() / 2.0f ) + context.dpToPx(8)
+        }.height()
+        val dateYOffset = timeYOffset + (timeTextBounds.height() / 2) - (dateTextHeight / 2.0f ) + context.dpToPx(8)
 
         val complicationsDrawingCache = buildComplicationDrawingCache(
             timeYOffset - timeTextBounds.height() - context.dpToPx(2),
-            dateYOffset + dateTextBounds.height() / 2
+            dateYOffset + dateTextHeight / 2
         )
 
         currentTimeSize = timeSize
@@ -262,6 +275,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             centerX,
             centerY,
             timeYOffset,
+            dateTextHeight,
             dateYOffset,
             complicationsDrawingCache
         )
@@ -349,7 +363,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
                                                  lowBitAmbient: Boolean,
                                                  burnInProtection: Boolean,
                                                  isUserPremium: Boolean,
-                                                 drawSecondsRing: Boolean) {
+                                                 drawSecondsRing: Boolean,
+                                                 weatherComplicationData: ComplicationData?) {
         val timeText = if( storage.getUse24hTimeFormat()) {
             timeFormatter24H.format(currentTime)
         } else {
@@ -361,7 +376,20 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         complicationsDrawingCache.drawComplications(canvas, ambient, currentTime, isUserPremium)
 
         val dateText = formatDateTime(context, currentTime.time, FORMAT_SHOW_DATE or FORMAT_SHOW_WEEKDAY or FORMAT_ABBREV_WEEKDAY)
-        val dateXOffset = centerX - (datePaint.measureText(dateText) / 2f)
+        val dateTextLength = datePaint.measureText(dateText)
+        val dateXOffset = if( weatherComplicationData != null ) {
+            val weatherText = weatherComplicationData.shortText
+            val weatherIcon = weatherComplicationData.icon
+
+            if( weatherText != null && weatherIcon != null ) {
+                drawWeatherAndComputeDateXOffset(weatherText, weatherIcon, currentTime, dateTextLength, canvas)
+            } else {
+                centerX - (dateTextLength / 2f)
+            }
+        } else {
+            centerX - (dateTextLength / 2f)
+        }
+
         canvas.drawText(dateText, dateXOffset, dateYOffset, datePaint)
 
         if( drawSecondsRing && !ambient ) {
@@ -370,6 +398,53 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             val endAngle = (secondsCalendar.get(Calendar.SECOND) * 6).toFloat()
             canvas.drawArc(0F, 0F, screenWidth.toFloat(), screenHeight.toFloat(), 270F, endAngle, false, secondsRingPaint)
         }
+    }
+
+    private fun DrawingState.CacheAvailable.drawWeatherAndComputeDateXOffset(
+        weatherText: ComplicationText,
+        weatherIcon: Icon,
+        currentTime: Date,
+        dateTextLength: Float,
+        canvas: Canvas
+    ): Float {
+        val weatherIconSize = dateHeight
+        val weatherTextString = weatherText.getText(context, currentTime.time).toString()
+        val weatherTextLength = datePaint.measureText(weatherTextString)
+        val dateFontMetrics = datePaint.fontMetrics
+
+        val dateXOffset = centerX - (dateTextLength / 2f) - weatherTextLength / 2f - weatherIconSize / 2f - spaceBeforeWeather
+
+        val cachedWeatherIcon = this@WatchFaceDrawerImpl.currentWeatherIcon
+        val cachedWeatherBitmap = this@WatchFaceDrawerImpl.currentWeatherBitmap
+        val weatherIconBitmap = if ( cachedWeatherIcon != null && cachedWeatherBitmap != null && weatherIcon.sameAs(cachedWeatherIcon) ) {
+                cachedWeatherBitmap
+        } else {
+            val bitmap = weatherIcon.loadDrawable(context).toBitmap()
+            this@WatchFaceDrawerImpl.currentWeatherBitmap = bitmap
+            this@WatchFaceDrawerImpl.currentWeatherIcon = weatherIcon
+
+            bitmap
+        }
+
+        weatherIconRect.left = (dateXOffset + dateTextLength + spaceBeforeWeather).toInt()
+        weatherIconRect.top = (dateYOffset - weatherIconSize + dateFontMetrics.descent).toInt()
+        weatherIconRect.right = (dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather).toInt()
+        weatherIconRect.bottom = (dateYOffset + dateFontMetrics.descent).toInt()
+
+        canvas.drawText(
+            weatherTextString,
+            dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather * 2,
+            dateYOffset,
+            datePaint
+        )
+        canvas.drawBitmap(
+            weatherIconBitmap,
+            null,
+            weatherIconRect,
+            weatherIconPaint
+        )
+
+        return dateXOffset
     }
 
     private fun ComplicationsDrawingCache.drawComplications(canvas: Canvas, ambient: Boolean, currentTime: Date, isUserPremium: Boolean) {
@@ -411,6 +486,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             isAntiAlias = !(ambient && lowBitAmbient)
             color = if( ambient ) { dateColorDimmed } else { dateColor }
         }
+
+        weatherIconPaint.isAntiAlias = !ambient
     }
 
     private fun Context.dpToPx(dp: Int): Int {
@@ -429,13 +506,15 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             }
         ) * scaleFactor
 
-        datePaint.textSize = context.resources.getDimension(
+        val dateSize = context.resources.getDimension(
             if( isRound ) {
                 R.dimen.date_text_size_round
             } else {
                 R.dimen.date_text_size
             }
         ) * scaleFactor
+
+        datePaint.textSize = dateSize
     }
 }
 
@@ -450,6 +529,7 @@ private sealed class DrawingState {
                               val centerX: Float,
                               val centerY: Float,
                               val timeYOffset: Float,
+                              val dateHeight: Int,
                               val dateYOffset: Float,
                               val complicationsDrawingCache: ComplicationsDrawingCache) : DrawingState()
 }
