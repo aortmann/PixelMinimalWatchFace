@@ -18,7 +18,7 @@
     <string name="complication_config">Configure widgets</string>
 
     <string name="config_complications_color_label">Widgets accent color</string>
-    <string name="config_premium_text">To setup widgets you have to become a premium user. Install the companion app on your phone to continue</string>
+    <string name="config_premium_text">To setup widgets and display weather info you have to become a premium user.\nInstall the companion app on your phone to continue</string>
     <string name="config_premium_button_cta">Open companion app on phone</string>
     <string name="config_feedback_cta">Give your feedback</string>
     <string name="config_version">Version: %s</string>
