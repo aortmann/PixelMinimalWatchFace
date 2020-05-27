@@ -40,6 +40,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.benoitletondor.pixelminimalwatchface.helper.isPermissionGranted
+import com.benoitletondor.pixelminimalwatchface.helper.openActivity
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import com.benoitletondor.pixelminimalwatchface.rating.FeedbackActivity
@@ -56,6 +57,7 @@ private const val MINIMUM_COMPLICATION_UPDATE_INTERVAL_MS = 1000L
 
 const val WEAR_OS_APP_PACKAGE = "com.google.android.wearable.app"
 const val WEATHER_PROVIDER_SERVICE = "com.google.android.clockwork.home.weather.WeatherProviderService"
+const val WEATHER_ACTIVITY_NAME = "com.google.android.clockwork.home.weather.WeatherActivity"
 
 class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
@@ -336,6 +338,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                             return
                         }
                     }
+                    if( watchFaceDrawer.tapOnWeather(x, y) ) {
+                        openActivity(WEAR_OS_APP_PACKAGE, WEATHER_ACTIVITY_NAME)
+                    }
                 }
             }
         }
@@ -343,14 +348,14 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             // Update weather subscription if needed
             if( storage.shouldShowWeather() != shouldShowWeather && storage.isUserPremium() ) {
-                if( storage.shouldShowWeather() ) {
+                shouldShowWeather = storage.shouldShowWeather()
+
+                if( shouldShowWeather ) {
                     subscribeToWeatherComplicationData()
                 } else {
                     unsubscribeToWeatherComplicationData()
                     weatherComplicationData = null
                 }
-
-                shouldShowWeather = storage.shouldShowWeather()
             }
 
             calendar.timeInMillis = System.currentTimeMillis()
@@ -362,7 +367,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ambient,
                 lowBitAmbient,
                 burnInProtection,
-                weatherComplicationData
+                if( shouldShowWeather ) { weatherComplicationData } else { null }
             )
 
             if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {

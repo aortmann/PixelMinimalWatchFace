@@ -18,7 +18,7 @@
 
     <string name="loading_premium_status">Loading…</string>
     <string name="premium_status">You\'re premium!</string>
-    <string name="premium_status_2">You can setup your watch face widgets on your watch!\n\nMake sure you installed Pixel Minimal Watch Face on your Watch too. If you have any issue, please contact me using the menu.\n\nThank you so much for your support :)</string>
+    <string name="premium_status_2">You can setup your watch face widgets and weather display on your watch!\n\nMake sure you installed Pixel Minimal Watch Face on your Watch too. If you have any issue, please contact me using the menu.\n\nThank you so much for your support :)</string>
     <string name="premium_sync_cta">Sync premium status with Watch</string>
     <string name="premium_error_title">Oops</string>
     <string name="premium_error">Unable to reach PlayStore to verify your premium status.\n\nPlease check your connection and try again.\n(%s)</string>
