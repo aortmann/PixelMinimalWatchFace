@@ -118,7 +118,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         spaceBeforeWeather = context.dpToPx(5)
         timePaint = Paint().apply {
             typeface = productSansRegularFont
-            strokeWidth = 1.5f
+            strokeWidth = 1.8f
         }
         datePaint = Paint().apply {
             typeface = productSansRegularFont
