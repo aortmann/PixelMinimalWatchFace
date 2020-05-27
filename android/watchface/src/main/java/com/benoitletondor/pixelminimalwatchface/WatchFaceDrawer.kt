@@ -53,6 +53,7 @@ interface WatchFaceDrawer {
                                  complicationDrawable: ComplicationDrawable,
                                  data: ComplicationData?,
                                  complicationColors: ComplicationColors)
+    fun tapOnWeather(x: Int, y: Int): Boolean
 
     fun draw(canvas: Canvas,
              currentTime: Date,
@@ -94,7 +95,6 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
     private var currentTimeSize = 0
     private val secondsCalendar = Calendar.getInstance()
     private var spaceBeforeWeather = 0
-    private val weatherIconRect = Rect()
 
     override fun onCreate(context: Context, storage: Storage) {
         this.context = context
@@ -203,6 +203,18 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             complicationDrawable.setTextSizeActive(textSize)
             complicationDrawable.setTextSizeAmbient(textSize)
         }
+    }
+
+    override fun tapOnWeather(x: Int, y: Int): Boolean {
+        val drawingState = drawingState
+        if( !storage.shouldShowWeather() ||
+            !storage.isUserPremium() ||
+            drawingState !is DrawingState.CacheAvailable ) {
+            return false
+        }
+
+        val displayRect = drawingState.getWeatherDisplayRect() ?: return false
+        return displayRect.contains(x, y)
     }
 
     @ColorInt
@@ -386,9 +398,17 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             if( weatherText != null && weatherIcon != null ) {
                 drawWeatherAndComputeDateXOffset(weatherText, weatherIcon, currentTime, dateTextLength, canvas)
             } else {
+                currentWeatherBitmap = null
+                currentWeatherIcon = null
+                weatherTextEndX = null
+
                 centerX - (dateTextLength / 2f)
             }
         } else {
+            currentWeatherBitmap = null
+            currentWeatherIcon = null
+            weatherTextEndX = null
+
             centerX - (dateTextLength / 2f)
         }
 
@@ -433,9 +453,11 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             bitmap
         }
 
+        val weatherTextX = dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather * 2
+
         canvas.drawText(
             weatherTextString,
-            dateXOffset + dateTextLength + weatherIconSize + spaceBeforeWeather * 2,
+            weatherTextX,
             dateYOffset,
             datePaint
         )
@@ -445,6 +467,8 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             weatherIconRect,
             weatherIconPaint
         )
+
+        weatherTextEndX = weatherTextX + weatherTextLength
 
         return dateXOffset
     }
@@ -538,7 +562,23 @@ private sealed class DrawingState {
                               val dateYOffset: Float,
                               val complicationsDrawingCache: ComplicationsDrawingCache,
                               var currentWeatherIcon: Icon? = null,
-                              var currentWeatherBitmap: Bitmap? = null) : DrawingState()
+                              var currentWeatherBitmap: Bitmap? = null,
+                              var weatherTextEndX: Float? = null) : DrawingState() {
+        val weatherIconRect = Rect()
+
+        fun getWeatherDisplayRect(): Rect? {
+            val currentWeatherIcon = currentWeatherIcon
+            val currentWeatherBitmap = currentWeatherBitmap
+            val weatherTextEndX = weatherTextEndX
+            if( currentWeatherIcon == null || currentWeatherBitmap == null || weatherTextEndX == null ) {
+                return null
+            }
+
+            return Rect(weatherIconRect).apply {
+                right = weatherTextEndX.toInt()
+            }
+        }
+    }
 }
 
 private data class ComplicationsDrawingCache(
