@@ -295,7 +295,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
 
             if( watchFaceComplicationId == WEATHER_COMPLICATION_ID ) {
-                weatherComplicationData = if( shouldShowWeather && data.type == ComplicationData.TYPE_SHORT_TEXT ) {
+                weatherComplicationData = if( data.type == ComplicationData.TYPE_SHORT_TEXT ) {
                     data
                 } else {
                     null
@@ -367,7 +367,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 ambient,
                 lowBitAmbient,
                 burnInProtection,
-                weatherComplicationData
+                if( shouldShowWeather ) { weatherComplicationData } else { null }
             )
 
             if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {
