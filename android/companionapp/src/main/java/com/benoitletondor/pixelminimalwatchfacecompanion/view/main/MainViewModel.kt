@@ -16,6 +16,7 @@
 package com.benoitletondor.pixelminimalwatchfacecompanion.view.main
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
@@ -27,27 +28,30 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.config.Config
 import com.benoitletondor.pixelminimalwatchfacecompanion.config.getVouchers
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.CapabilityInfo
 import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
                     private val sync: Sync,
                     private val config: Config,
-                    private val storage: Storage) : ViewModel(), CoroutineScope by MainScope() {
+                    private val storage: Storage) : ViewModel(), CoroutineScope by MainScope(), CapabilityClient.OnCapabilityChangedListener {
     val launchOnboardingEvent = SingleLiveEvent<Unit>()
     val errorSyncingEvent = SingleLiveEvent<Throwable>()
     val errorPayingEvent = SingleLiveEvent<Throwable>()
     val syncSucceedEvent = SingleLiveEvent<Unit>()
-    val stateEventStream = MutableLiveData<State>(if( billing.isUserPremium() ) { State.Premium } else { State.Loading })
+    val stateEventStream = MutableLiveData(if( billing.isUserPremium() ) { State.Premium(AppInstalledStatus.VERIFYING) } else { State.Loading })
     val voucherFlowLaunchEvent = SingleLiveEvent<String>()
+    val openPlayStoreStatusEvent = SingleLiveEvent<Boolean>()
 
     private val userPremiumEventObserver: Observer<PremiumCheckStatus> = Observer { premiumCheckStatus ->
         if( (premiumCheckStatus == PremiumCheckStatus.Premium && stateEventStream.value == State.NotPremium) ||
-            (premiumCheckStatus == PremiumCheckStatus.NotPremium && stateEventStream.value == State.Premium) ||
+            (premiumCheckStatus == PremiumCheckStatus.NotPremium && stateEventStream.value is State.Premium) ||
             (premiumCheckStatus == PremiumCheckStatus.Premium || premiumCheckStatus == PremiumCheckStatus.NotPremium) && stateEventStream.value == State.Loading ) {
             syncState(premiumCheckStatus == PremiumCheckStatus.Premium)
         }
 
-        if( premiumCheckStatus is PremiumCheckStatus.Error && stateEventStream.value != State.Premium ) {
+        if( premiumCheckStatus is PremiumCheckStatus.Error && stateEventStream.value !is State.Premium ) {
             stateEventStream.value = State.Error(premiumCheckStatus.error)
         }
 
@@ -62,6 +66,13 @@ class MainViewModel(private val billing: Billing,
         if( !storage.isOnboardingFinished() ) {
             launchOnboardingEvent.value = Unit
         }
+
+        syncAppInstalledStatusIfPremium()
+        sync.subscribeToCapabilityChanges(this)
+    }
+
+    override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
+        syncAppInstalledStatusIfPremium()
     }
 
     private fun syncState(userPremium: Boolean) {
@@ -80,13 +91,14 @@ class MainViewModel(private val billing: Billing,
                 errorSyncingEvent.value = t
             }
 
-            stateEventStream.value = if( userPremium ) { State.Premium } else { State.NotPremium }
+            stateEventStream.value = if( userPremium ) { State.Premium(safeGetAppInstallStatus()) } else { State.NotPremium }
         }
     }
 
     override fun onCleared() {
         billing.userPremiumEventStream.removeObserver(userPremiumEventObserver)
         cancel()
+        sync.unsubscribeToCapabilityChanges(this)
 
         super.onCleared()
     }
@@ -132,11 +144,50 @@ class MainViewModel(private val billing: Billing,
         voucherFlowLaunchEvent.value = voucher
     }
 
+    fun onInstallWatchFaceButtonPressed() {
+        launch {
+            try {
+                openPlayStoreStatusEvent.value = sync.openPlayStoreOnWatch()
+            } catch (t: Throwable) {
+                Log.e("MainViewModel", "Error opening PlayStore", t)
+                openPlayStoreStatusEvent.value = false
+            }
+        }
+    }
+
+    private suspend fun safeGetAppInstallStatus(): AppInstalledStatus {
+        return try {
+            val appInstalled = sync.wearDeviceWithAppExists()
+            if( appInstalled ) { AppInstalledStatus.INSTALLED } else { AppInstalledStatus.NOT_INSTALLED }
+        } catch (t: Throwable) {
+            Log.e("MainViewModel", "Error getting wear device with app existing status", t)
+            AppInstalledStatus.UNKNOWN
+        }
+    }
+
+    private fun syncAppInstalledStatusIfPremium() {
+        if( stateEventStream.value is State.Premium ) {
+            launch {
+                val appInstalledStatus = safeGetAppInstallStatus()
+                if( stateEventStream.value is State.Premium ) {
+                    stateEventStream.value = State.Premium(appInstalledStatus)
+                }
+            }
+        }
+    }
+
     sealed class State {
         object Loading : State()
         object NotPremium : State()
         object Syncing : State()
-        object Premium : State()
+        class Premium(val appInstalledStatus: AppInstalledStatus) : State()
         class Error(val error: Throwable) : State()
+    }
+
+    enum class AppInstalledStatus {
+        VERIFYING,
+        INSTALLED,
+        NOT_INSTALLED,
+        UNKNOWN
     }
 }

@@ -34,6 +34,9 @@ android {
         versionName "1.4.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "WATCH_FACE_APP_PLAYSTORE_URL", '"https://play.google.com/store/apps/details?id=com.benoitletondor.pixelminimalwatchface"'
+        buildConfigField "String", "WATCH_CAPABILITY", '"verify_com_benoitletondor_pixelminimalwatchface"'
     }
 
     signingConfigs {
@@ -82,6 +85,8 @@ dependencies {
     implementation 'org.koin:koin-android-viewmodel:2.1.5'
 
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
+    implementation 'com.google.android.support:wearable:2.7.0'
+    compileOnly 'com.google.android.wearable:wearable:2.7.0'
 
     implementation 'com.android.billingclient:billing:2.2.1'
     implementation 'com.android.billingclient:billing-ktx:2.2.1'
