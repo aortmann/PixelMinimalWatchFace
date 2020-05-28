@@ -17,4 +17,6 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.sync
 
 interface Sync {
     suspend fun sendPremiumStatus(isUserPremium: Boolean)
+    suspend fun wearDeviceWithAppExists(): Boolean
+    suspend fun openPlayStoreOnWatch(): Boolean
 }
