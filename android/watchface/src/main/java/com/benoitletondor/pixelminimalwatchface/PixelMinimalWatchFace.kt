@@ -19,6 +19,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.*
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
@@ -39,6 +40,7 @@ import android.view.WindowInsets
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.benoitletondor.pixelminimalwatchface.helper.FullBrightnessActivity
 import com.benoitletondor.pixelminimalwatchface.helper.isPermissionGranted
 import com.benoitletondor.pixelminimalwatchface.helper.openActivity
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
@@ -145,6 +147,9 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         private var shouldShowWeather = false
         private var weatherComplicationData: ComplicationData? = null
+
+        private var lastTapEventTimestamp: Long = 0
+
 
         private val timeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -335,11 +340,26 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                         val complicationDrawable: ComplicationDrawable = complicationDrawableSparseArray.get(complicationId)
 
                         if ( complicationDrawable.onTap(x, y) ) {
+                            lastTapEventTimestamp = 0
                             return
                         }
                     }
-                    if( watchFaceDrawer.tapOnWeather(x, y) ) {
+                    if( watchFaceDrawer.tapIsOnWeather(x, y) ) {
                         openActivity(WEAR_OS_APP_PACKAGE, WEATHER_ACTIVITY_NAME)
+                        lastTapEventTimestamp = 0
+                        return
+                    }
+                    if( watchFaceDrawer.tapIsInCenterOfScreen(x, y) ) {
+                        if( lastTapEventTimestamp == 0L || eventTime - lastTapEventTimestamp > 200 ) {
+                            lastTapEventTimestamp = eventTime
+                            return
+                        } else {
+                            lastTapEventTimestamp = 0
+                            startActivity(Intent(this@PixelMinimalWatchFace, FullBrightnessActivity::class.java).apply {
+                                flags = FLAG_ACTIVITY_NEW_TASK
+                            })
+                            return
+                        }
                     }
                 }
             }

@@ -53,7 +53,8 @@ interface WatchFaceDrawer {
                                  complicationDrawable: ComplicationDrawable,
                                  data: ComplicationData?,
                                  complicationColors: ComplicationColors)
-    fun tapOnWeather(x: Int, y: Int): Boolean
+    fun tapIsOnWeather(x: Int, y: Int): Boolean
+    fun tapIsInCenterOfScreen(x: Int, y: Int): Boolean
 
     fun draw(canvas: Canvas,
              currentTime: Date,
@@ -62,6 +63,7 @@ interface WatchFaceDrawer {
              lowBitAmbient: Boolean,
              burnInProtection: Boolean,
              weatherComplicationData: ComplicationData?)
+
 }
 
 class WatchFaceDrawerImpl : WatchFaceDrawer {
@@ -205,7 +207,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
         }
     }
 
-    override fun tapOnWeather(x: Int, y: Int): Boolean {
+    override fun tapIsOnWeather(x: Int, y: Int): Boolean {
         val drawingState = drawingState
         if( !storage.shouldShowWeather() ||
             !storage.isUserPremium() ||
@@ -215,6 +217,19 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
 
         val displayRect = drawingState.getWeatherDisplayRect() ?: return false
         return displayRect.contains(x, y)
+    }
+
+    override fun tapIsInCenterOfScreen(x: Int, y: Int): Boolean {
+        val drawingState = drawingState as? DrawingState.CacheAvailable ?: return false
+
+        val centerRect = Rect(
+            (drawingState.screenWidth * 0.25f).toInt(),
+            (drawingState.screenHeight * 0.25f).toInt(),
+            (drawingState.screenWidth * 0.75f).toInt(),
+            (drawingState.screenHeight * 0.75f).toInt()
+        )
+
+        return centerRect.contains(x, y)
     }
 
     @ColorInt

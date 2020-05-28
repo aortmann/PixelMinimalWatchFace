@@ -50,6 +50,10 @@
 
         <activity android:name="android.support.wearable.complications.ComplicationHelperActivity"/>
 
+        <activity
+            android:name=".helper.FullBrightnessActivity"
+            android:theme="@style/TransparentTheme"/>
+
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
