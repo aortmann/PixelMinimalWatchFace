@@ -18,7 +18,11 @@
 
     <string name="loading_premium_status">Loading…</string>
     <string name="premium_status">You\'re premium!</string>
-    <string name="premium_status_2">You can setup your watch face widgets and weather display on your watch!\n\nMake sure you installed Pixel Minimal Watch Face on your Watch too. If you have any issue, please contact me using the menu.\n\nThank you so much for your support :)</string>
+    <string name="premium_status_not_installed">To continue, please install the Watch Face on your watch first by clicking on the install button below.\n\nWhen installed and launched on your Watch, use the Sync button bellow to sync your premium status and enable widgets and weather display.\n\nIf you have any issue, please contact me using the menu.</string>
+    <string name="premium_status_installed">You can setup widgets and weather display on your watch, using the Watch Face settings!\n\nIf you have any issue, please contact me using the menu.</string>
+    <string name="premium_status_loading">Looking for the Watch Face on your watch to sync premium status…</string>
+    <string name="premium_status_unknown">You can setup your watch face widgets and weather display on your watch!\n\nMake sure you installed Pixel Minimal Watch Face on your Watch too. If you have any issue, please contact me using the menu.</string>
+    <string name="premium_status_thanks">Thank you so much for your support :)</string>
     <string name="premium_sync_cta">Sync premium status with Watch</string>
     <string name="premium_install_cta">Install Watch Face on Watch</string>
     <string name="premium_error_title">Oops</string>
@@ -53,5 +57,5 @@
     <string name="onboarding_finish_cta">Let\'s go</string>
     <string name="playstore_opened_on_watch_message">Continue on your watch</string>
     <string name="playstore_not_opened_on_watch_title">Unable to open PlayStore</string>
-    <string name="playstore_not_opened_on_watch_message">An error occurred opening the PlayStore on your Watch.\n\nInstall the Watch Face on your watch manually by searching "Pixel Minimal Watch Face" on your watch\'s PlayStore.\n\n(Be careful not to install another watch face by mistake called "Pixel Watch Face", it\'s nearly the same name!)</string>
+    <string name="playstore_not_opened_on_watch_message">An error occurred opening the PlayStore on your Watch.\n\nInstall the Watch Face on your watch manually by searching on your watch\'s PlayStore:\n\"Pixel Minimal Watch Face\"\n\n(Be careful not to install another watch face by mistake called \"Pixel Watch Face\", it\'s nearly the same name!)</string>
 </resources>

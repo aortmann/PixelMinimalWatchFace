@@ -28,12 +28,14 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.config.Config
 import com.benoitletondor.pixelminimalwatchfacecompanion.config.getVouchers
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.CapabilityInfo
 import kotlinx.coroutines.*
 
 class MainViewModel(private val billing: Billing,
                     private val sync: Sync,
                     private val config: Config,
-                    private val storage: Storage) : ViewModel(), CoroutineScope by MainScope() {
+                    private val storage: Storage) : ViewModel(), CoroutineScope by MainScope(), CapabilityClient.OnCapabilityChangedListener {
     val launchOnboardingEvent = SingleLiveEvent<Unit>()
     val errorSyncingEvent = SingleLiveEvent<Throwable>()
     val errorPayingEvent = SingleLiveEvent<Throwable>()
@@ -65,14 +67,12 @@ class MainViewModel(private val billing: Billing,
             launchOnboardingEvent.value = Unit
         }
 
-        if( stateEventStream.value is State.Premium ) {
-            launch {
-                val appInstalled = sync.wearDeviceWithAppExists()
-                if( stateEventStream.value is State.Premium ) {
-                    State.Premium(if( appInstalled ) { AppInstalledStatus.INSTALLED } else { AppInstalledStatus.NOT_INSTALLED })
-                }
-            }
-        }
+        syncAppInstalledStatusIfPremium()
+        sync.subscribeToCapabilityChanges(this)
+    }
+
+    override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
+        syncAppInstalledStatusIfPremium()
     }
 
     private fun syncState(userPremium: Boolean) {
@@ -91,23 +91,14 @@ class MainViewModel(private val billing: Billing,
                 errorSyncingEvent.value = t
             }
 
-            try {
-                val appInstalled = sync.wearDeviceWithAppExists()
-                stateEventStream.value = if( userPremium ) {
-                    State.Premium(if( appInstalled ) { AppInstalledStatus.INSTALLED } else { AppInstalledStatus.NOT_INSTALLED })
-                } else {
-                    State.NotPremium
-                }
-            } catch (t: Throwable) {
-                Log.e("MainViewModel", "Error getting wear device with app existing status", t)
-                stateEventStream.value = if( userPremium ) { State.Premium(AppInstalledStatus.UNKNOWN) } else { State.NotPremium }
-            }
+            stateEventStream.value = if( userPremium ) { State.Premium(safeGetAppInstallStatus()) } else { State.NotPremium }
         }
     }
 
     override fun onCleared() {
         billing.userPremiumEventStream.removeObserver(userPremiumEventObserver)
         cancel()
+        sync.unsubscribeToCapabilityChanges(this)
 
         super.onCleared()
     }
@@ -160,6 +151,27 @@ class MainViewModel(private val billing: Billing,
             } catch (t: Throwable) {
                 Log.e("MainViewModel", "Error opening PlayStore", t)
                 openPlayStoreStatusEvent.value = false
+            }
+        }
+    }
+
+    private suspend fun safeGetAppInstallStatus(): AppInstalledStatus {
+        return try {
+            val appInstalled = sync.wearDeviceWithAppExists()
+            if( appInstalled ) { AppInstalledStatus.INSTALLED } else { AppInstalledStatus.NOT_INSTALLED }
+        } catch (t: Throwable) {
+            Log.e("MainViewModel", "Error getting wear device with app existing status", t)
+            AppInstalledStatus.UNKNOWN
+        }
+    }
+
+    private fun syncAppInstalledStatusIfPremium() {
+        if( stateEventStream.value is State.Premium ) {
+            launch {
+                val appInstalledStatus = safeGetAppInstallStatus()
+                if( stateEventStream.value is State.Premium ) {
+                    stateEventStream.value = State.Premium(appInstalledStatus)
+                }
             }
         }
     }

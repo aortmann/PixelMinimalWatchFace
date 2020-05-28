@@ -22,7 +22,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
-import com.benoitletondor.pixelminimalwatchfacecompanion.helper.await
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.PutDataMapRequest
@@ -59,27 +58,39 @@ class SyncImpl(private val context: Context) : Sync {
     }
 
     override suspend fun openPlayStoreOnWatch() = suspendCancellableCoroutine<Boolean> { continuation ->
-        val intentAndroid = Intent(Intent.ACTION_VIEW)
-            .addCategory(Intent.CATEGORY_BROWSABLE)
-            .setData(Uri.parse(BuildConfig.WATCH_FACE_APP_PLAYSTORE_URL))
+        try {
+            val intentAndroid = Intent(Intent.ACTION_VIEW)
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+                .setData(Uri.parse(BuildConfig.WATCH_FACE_APP_PLAYSTORE_URL))
 
-        RemoteIntent.startRemoteActivity(
-            context,
-            intentAndroid,
-            object : ResultReceiver(Handler()) {
-                override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                    if (resultCode == RemoteIntent.RESULT_OK) {
-                        if( continuation.isActive ) {
-                            continuation.resume(true)
-                        }
-                    } else {
-                        if( continuation.isActive ) {
-                            continuation.resumeWithException(RuntimeException("Error opening PlayStore on watch (result code: $resultCode)"))
+            RemoteIntent.startRemoteActivity(
+                context,
+                intentAndroid,
+                object : ResultReceiver(Handler()) {
+                    override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+                        if (resultCode == RemoteIntent.RESULT_OK) {
+                            if( continuation.isActive ) {
+                                continuation.resume(true)
+                            }
+                        } else {
+                            if( continuation.isActive ) {
+                                continuation.resumeWithException(RuntimeException("Error opening PlayStore on watch (result code: $resultCode)"))
+                            }
                         }
                     }
                 }
-            }
-        )
+            )
+        } catch (t: Throwable) {
+            continuation.resumeWithException(t)
+        }
+    }
+
+    override fun subscribeToCapabilityChanges(listener: CapabilityClient.OnCapabilityChangedListener) {
+        capabilityClient.addListener(listener, BuildConfig.WATCH_CAPABILITY)
+    }
+
+    override fun unsubscribeToCapabilityChanges(listener: CapabilityClient.OnCapabilityChangedListener) {
+        capabilityClient.removeListener(listener)
     }
 
 }

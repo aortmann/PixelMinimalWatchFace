@@ -73,24 +73,32 @@ class MainActivity : AppCompatActivity() {
                     main_activity_error_view.visibility = View.GONE
                     when( state.appInstalledStatus ) {
                         MainViewModel.AppInstalledStatus.VERIFYING -> {
-                            main_activity_premium_view_install_button.visibility = View.VISIBLE
+                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_loading)
+                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.VISIBLE
+                            main_activity_premium_view_install_button.visibility = View.GONE
                             main_activity_premium_view_install_button.isEnabled = false
-                            main_activity_premium_view_sync_button.visibility = View.VISIBLE
-                            main_activity_premium_view_sync_button.isEnabled = true
+                            main_activity_premium_view_sync_button.visibility = View.GONE
+                            main_activity_premium_view_sync_button.isEnabled = false
                         }
                         MainViewModel.AppInstalledStatus.UNKNOWN -> {
+                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_unknown)
+                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
                             main_activity_premium_view_install_button.visibility = View.GONE
                             main_activity_premium_view_install_button.isEnabled = false
                             main_activity_premium_view_sync_button.visibility = View.VISIBLE
                             main_activity_premium_view_sync_button.isEnabled = true
                         }
                         MainViewModel.AppInstalledStatus.NOT_INSTALLED -> {
+                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_not_installed)
+                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
                             main_activity_premium_view_install_button.visibility = View.VISIBLE
                             main_activity_premium_view_install_button.isEnabled = true
                             main_activity_premium_view_sync_button.visibility = View.VISIBLE
-                            main_activity_premium_view_sync_button.isEnabled = false
+                            main_activity_premium_view_sync_button.isEnabled = true
                         }
                         MainViewModel.AppInstalledStatus.INSTALLED -> {
+                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_installed)
+                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
                             main_activity_premium_view_install_button.visibility = View.GONE
                             main_activity_premium_view_install_button.isEnabled = false
                             main_activity_premium_view_sync_button.visibility = View.VISIBLE
