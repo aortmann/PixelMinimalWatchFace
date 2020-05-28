@@ -350,7 +350,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                         return
                     }
                     if( watchFaceDrawer.tapIsInCenterOfScreen(x, y) ) {
-                        if( lastTapEventTimestamp == 0L || eventTime - lastTapEventTimestamp > 200 ) {
+                        if( lastTapEventTimestamp == 0L || eventTime - lastTapEventTimestamp > 400 ) {
                             lastTapEventTimestamp = eventTime
                             return
                         } else {
