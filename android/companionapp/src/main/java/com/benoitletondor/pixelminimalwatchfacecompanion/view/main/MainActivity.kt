@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.openPlayStoreStatusEvent.observe(this, Observer { opened ->
             if( opened ) {
-                Toast.makeText(this, R.string.playstore_opened_on_watch_message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.playstore_opened_on_watch_message, Toast.LENGTH_LONG).show()
             } else {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.playstore_not_opened_on_watch_title)

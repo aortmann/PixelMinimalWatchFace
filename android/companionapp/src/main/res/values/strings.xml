@@ -19,7 +19,7 @@
     <string name="loading_premium_status">Loading…</string>
     <string name="premium_status">You\'re premium!</string>
     <string name="premium_status_not_installed">To continue, please install the Watch Face on your watch by clicking on the install button below.\n\nWhen installed and launched on your Watch, use the Sync button bellow to sync your premium status and enable widgets and weather display.\n\nIf you have any issue, please contact me using the menu.</string>
-    <string name="premium_status_installed">You can setup widgets and weather display on your watch, using the Watch Face settings!\n\nIf you have any issue, please contact me using the menu.</string>
+    <string name="premium_status_installed">You can setup widgets and weather display on your watch, using the Watch Face settings!\n\nUse the Sync button bellow to sync your premium status to your watch if needed.\n\nIf you have any issue, please contact me using the menu.</string>
     <string name="premium_status_loading">Looking for the Watch Face on your watch to sync premium status…</string>
     <string name="premium_status_unknown">You can setup your watch face widgets and weather display on your watch!\n\nMake sure you installed Pixel Minimal Watch Face on your Watch too.\n\nIf you have any issue, please contact me using the menu.</string>
     <string name="premium_status_thanks">Thank you so much for your support :)</string>
