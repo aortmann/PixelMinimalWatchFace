@@ -15,6 +15,19 @@
  */
 package com.benoitletondor.pixelminimalwatchfacecompanion.sync
 
+import com.google.android.gms.wearable.CapabilityClient
+
 interface Sync {
     suspend fun sendPremiumStatus(isUserPremium: Boolean)
+    suspend fun getWearableStatus(): WearableStatus
+    suspend fun openPlayStoreOnWatch(): Boolean
+    fun subscribeToCapabilityChanges(listener: CapabilityClient.OnCapabilityChangedListener)
+    fun unsubscribeToCapabilityChanges(listener: CapabilityClient.OnCapabilityChangedListener)
+
+    sealed class WearableStatus {
+        object AvailableAppNotInstalled : WearableStatus()
+        object AvailableAppInstalled: WearableStatus()
+        object NotAvailable: WearableStatus()
+        class Error(val error: Throwable): WearableStatus()
+    }
 }
