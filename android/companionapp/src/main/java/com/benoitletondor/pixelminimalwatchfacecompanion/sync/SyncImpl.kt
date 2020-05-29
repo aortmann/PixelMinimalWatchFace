@@ -51,10 +51,23 @@ class SyncImpl(private val context: Context) : Sync {
         dataClient.putDataItem(putDataRequest).await()
     }
 
-    override suspend fun wearDeviceWithAppExists(): Boolean {
-        val capabilityInfoTask = capabilityClient.getCapability(BuildConfig.WATCH_CAPABILITY, CapabilityClient.FILTER_ALL)
-        val result = capabilityInfoTask.await()
-        return result.nodes.isNotEmpty()
+    override suspend fun getWearableStatus(): Sync.WearableStatus {
+        try {
+            val nodes = Wearable.getNodeClient(context).connectedNodes.await()
+            if( nodes.isEmpty() ) {
+                return Sync.WearableStatus.NotAvailable
+            }
+
+            val capabilityInfoTask = capabilityClient.getCapability(BuildConfig.WATCH_CAPABILITY, CapabilityClient.FILTER_ALL)
+            val result = capabilityInfoTask.await()
+            return if( result.nodes.isEmpty() ) {
+                Sync.WearableStatus.AvailableAppNotInstalled
+            } else {
+                Sync.WearableStatus.AvailableAppInstalled
+            }
+        } catch (t: Throwable) {
+            return Sync.WearableStatus.Error(t)
+        }
     }
 
     override suspend fun openPlayStoreOnWatch() = suspendCancellableCoroutine<Boolean> { continuation ->

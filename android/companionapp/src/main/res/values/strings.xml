@@ -29,7 +29,8 @@
     <string name="premium_error">Unable to reach PlayStore to verify your premium status.\n\nPlease check your connection and try again.\n(%s)</string>
     <string name="error_retry_cta">Retry</string>
     <string name="syncing_premium_status">Syncing with watch…</string>
-    <string name="not_premium_status">You can use the watch face for free.\nTo unlock widgets and weather, become a premium user:</string>
+    <string name="not_premium_install">You can use the Watch Face for free on your watch.</string>
+    <string name="not_premium_status">To unlock widgets and weather, become a premium user:</string>
     <string name="not_premium_status_2">(1 time payment, no hidden fees)</string>
     <string name="premium_cta">Become premium</string>
     <string name="promocode_cta">Redeem code</string>
@@ -53,9 +54,9 @@
     <string name="premium_3_title">Pick the widgets accent color</string>
     <string name="sync_succeed_message">Sync done! Check your watch.</string>
     <string name="onboarding_title">Welcome into Pixel Minimal Watch Face companion app</string>
-    <string name="onboarding_text">Download Pixel Minimal Watch Face on your watch first, for free.\n\nUse this phone app if you want to buy premium mode to unlock widgets and weather.\n\nIf you have any issue, please contact me using the app menu for support.</string>
+    <string name="onboarding_text">This companion phone app is here to help you becoming premium to unlock widgets and weather.\n\nIf you have any issue, please contact me using the app menu for support.</string>
     <string name="onboarding_finish_cta">Let\'s go</string>
-    <string name="playstore_opened_on_watch_message">Continue on your watch</string>
+    <string name="playstore_opened_on_watch_message">Opening PlayStore on Watch…</string>
     <string name="playstore_not_opened_on_watch_title">Unable to open PlayStore</string>
     <string name="playstore_not_opened_on_watch_message">An error occurred opening the PlayStore on your Watch.\n\nInstall the Watch Face on your watch manually by searching on your watch\'s PlayStore:\n\"Pixel Minimal Watch Face\"\n\n(Be careful not to install another watch face by mistake called \"Pixel Watch Face\", it\'s nearly the same name!)</string>
 </resources>
