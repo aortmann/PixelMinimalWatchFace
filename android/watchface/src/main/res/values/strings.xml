@@ -18,15 +18,19 @@
     <string name="complication_config">Configure widgets</string>
 
     <string name="config_complications_color_label">Widgets accent color</string>
-    <string name="config_premium_text">To setup widgets you have to become a premium user. Install the companion app on your phone to continue</string>
+    <string name="config_premium_text">To setup widgets and display weather info you have to become a premium user.\nInstall the companion app on your phone to continue</string>
     <string name="config_premium_button_cta">Open companion app on phone</string>
     <string name="config_feedback_cta">Give your feedback</string>
     <string name="config_version">Version: %s</string>
     <string name="config_footer">Made by Benoit Letondor</string>
     <string name="config_hour_format_24h">Use 24h time</string>
     <string name="config_show_wear_os_logo">Show WearOS logo</string>
+    <string name="config_show_weather">Show weather after date</string>
+    <string name="config_show_filled_time_ambient">Use thin time in ambient mode</string>
     <string name="config_show_wear_os_logo_premium">WearOS logo as middle widget</string>
     <string name="config_show_complications_ambient">Widgets in ambient mode</string>
+    <string name="config_time_size">Size of time and date: %s</string>
+    <string name="config_show_seconds_ring">Show seconds ring</string>
 
     <string name="premium_confirmation">Configure widgets in Watch Face settings</string>
     <string name="open_phone_url_android_device">Continue on phone</string>
@@ -77,4 +81,10 @@
     <string name="color_lime_green">Lime green</string>
     <string name="color_lime">Lime</string>
     <string name="color_brown">Brown</string>
+
+    <string name="time_size_0">smaller</string>
+    <string name="time_size_25">small</string>
+    <string name="time_size_50">default</string>
+    <string name="time_size_75">big</string>
+    <string name="time_size_100">bigger</string>
 </resources>

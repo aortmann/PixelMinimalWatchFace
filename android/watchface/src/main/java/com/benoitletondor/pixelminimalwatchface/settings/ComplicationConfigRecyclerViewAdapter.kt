@@ -30,12 +30,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
-import com.benoitletondor.pixelminimalwatchface.BuildConfig
-import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace
+import com.benoitletondor.pixelminimalwatchface.*
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationId
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getComplicationIds
 import com.benoitletondor.pixelminimalwatchface.PixelMinimalWatchFace.Companion.getSupportedComplicationTypes
-import com.benoitletondor.pixelminimalwatchface.R
+import com.benoitletondor.pixelminimalwatchface.helper.isPermissionGranted
+import com.benoitletondor.pixelminimalwatchface.helper.isScreenRound
+import com.benoitletondor.pixelminimalwatchface.helper.isServiceAvailable
+import com.benoitletondor.pixelminimalwatchface.helper.timeSizeToHumanReadableString
 import com.benoitletondor.pixelminimalwatchface.model.ComplicationColors
 import com.benoitletondor.pixelminimalwatchface.model.Storage
 import java.util.concurrent.Executors
@@ -49,6 +51,10 @@ private const val TYPE_HOUR_FORMAT = 5
 private const val TYPE_SEND_FEEDBACK = 6
 private const val TYPE_SHOW_WEAR_OS_LOGO = 7
 private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
+private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
+private const val TYPE_TIME_SIZE = 10
+private const val TYPE_SHOW_SECONDS_RING = 11
+private const val TYPE_SHOW_WEATHER = 12
 
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
@@ -57,7 +63,11 @@ class ComplicationConfigRecyclerViewAdapter(
     private val hourFormatSelectionListener: (Boolean) -> Unit,
     private val onFeedbackButtonPressed: () -> Unit,
     private val showWearOSButtonListener: (Boolean) -> Unit,
-    private val showComplicationsAmbientListener: (Boolean) -> Unit
+    private val showComplicationsAmbientListener: (Boolean) -> Unit,
+    private val showFilledTimeAmbientListener: (Boolean) -> Unit,
+    private val timeSizeChangedListener: (Int) -> Unit,
+    private val showSecondsRingListener: (Boolean) -> Unit,
+    private val showWeatherListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -65,6 +75,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val watchFaceComponentName = ComponentName(context, PixelMinimalWatchFace::class.java)
     private val providerInfoRetriever = ProviderInfoRetriever(context, Executors.newCachedThreadPool())
     private var previewAndComplicationsViewHolder: PreviewAndComplicationsViewHolder? = null
+    private var showWeatherViewHolder: ShowWeatherViewHolder? = null
+    private val settings = generateSettingsList(context, storage)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -154,6 +166,53 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 showComplicationsAmbientListener
             )
+            TYPE_SHOW_FILLED_TIME_AMBIENT -> return ShowFilledTimeAmbientViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_filled_time_ambient,
+                    parent,
+                    false
+                ),
+                showFilledTimeAmbientListener
+            )
+            TYPE_TIME_SIZE -> return TimeSizeViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_time_size,
+                    parent,
+                    false
+                ),
+                timeSizeChangedListener
+            )
+            TYPE_SHOW_SECONDS_RING -> return ShowSecondsRingViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_seconds_ring,
+                    parent,
+                    false
+                ),
+                showSecondsRingListener
+            )
+            TYPE_SHOW_WEATHER -> {
+                val showWeatherViewHolder = ShowWeatherViewHolder(
+                    LayoutInflater.from(parent.context).inflate(
+                        R.layout.config_list_show_weather,
+                        parent,
+                        false
+                    )
+                ) { showWeather ->
+                    if( showWeather ) {
+                        (context as Activity).startActivityForResult(
+                            ComplicationHelperActivity.createPermissionRequestHelperIntent(
+                                context,
+                                watchFaceComponentName
+                            ),
+                            ComplicationConfigActivity.COMPLICATION_PERMISSION_REQUEST_CODE
+                        )
+                    } else {
+                        showWeatherListener(false)
+                    }
+                }
+                this.showWeatherViewHolder = showWeatherViewHolder
+                return showWeatherViewHolder
+            }
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -185,6 +244,22 @@ class ComplicationConfigRecyclerViewAdapter(
                 val showComplicationsAmbient = storage.shouldShowComplicationsInAmbientMode()
                 (viewHolder as ShowComplicationsAmbientViewHolder).setShowComplicationsAmbientSwitchChecked(showComplicationsAmbient)
             }
+            TYPE_SHOW_FILLED_TIME_AMBIENT -> {
+                val showFilledTimeAmbient = storage.shouldShowFilledTimeInAmbientMode()
+                (viewHolder as ShowFilledTimeAmbientViewHolder).setShowFilledTimeSwitchChecked(showFilledTimeAmbient)
+            }
+            TYPE_TIME_SIZE -> {
+                val size = storage.getTimeSize()
+                (viewHolder as TimeSizeViewHolder).setTimeSize(size)
+            }
+            TYPE_SHOW_SECONDS_RING -> {
+                val showSeconds = storage.shouldShowSecondsRing()
+                (viewHolder as ShowSecondsRingViewHolder).setShowSecondsRingSwitchChecked(showSeconds)
+            }
+            TYPE_SHOW_WEATHER -> {
+                val showWeather = storage.shouldShowWeather()
+                (viewHolder as ShowWeatherViewHolder).setShowWeatherViewSwitchChecked(showWeather)
+            }
         }
     }
 
@@ -199,6 +274,7 @@ class ComplicationConfigRecyclerViewAdapter(
                         when (watchFaceComplicationId) {
                             getComplicationId(ComplicationLocation.LEFT) -> { ComplicationLocation.LEFT }
                             getComplicationId(ComplicationLocation.MIDDLE) -> { ComplicationLocation.MIDDLE }
+                            getComplicationId(ComplicationLocation.BOTTOM) -> { ComplicationLocation.BOTTOM }
                             else -> { ComplicationLocation.RIGHT }
                         },
                         complicationProviderInfo,
@@ -211,37 +287,41 @@ class ComplicationConfigRecyclerViewAdapter(
         )
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if( storage.isUserPremium() ) {
-            when (position) {
-                0 -> TYPE_HEADER
-                1 -> TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG
-                2 -> TYPE_COLOR_CONFIG
-                3 -> TYPE_SHOW_WEAR_OS_LOGO
-                4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
-                5 -> TYPE_HOUR_FORMAT
-                6 -> TYPE_SEND_FEEDBACK
-                else -> TYPE_FOOTER
+    override fun getItemViewType(position: Int): Int = settings[position]
+
+    override fun getItemCount(): Int = settings.size
+
+    private fun generateSettingsList(context: Context, storage: Storage): List<Int> {
+        val isUserPremium = storage.isUserPremium()
+        val isScreenRound = context.isScreenRound()
+
+        val list = ArrayList<Int>(11)
+
+        list.add(TYPE_HEADER)
+        if( isUserPremium ) {
+            list.add(TYPE_PREVIEW_AND_COMPLICATIONS_CONFIG)
+            list.add(TYPE_COLOR_CONFIG)
+
+            if( context.isServiceAvailable(WEAR_OS_APP_PACKAGE, WEATHER_PROVIDER_SERVICE) ) {
+                list.add(TYPE_SHOW_WEATHER)
             }
         } else {
-            when (position) {
-                0 -> TYPE_HEADER
-                1 -> TYPE_BECOME_PREMIUM
-                2 -> TYPE_SHOW_WEAR_OS_LOGO
-                3 -> TYPE_HOUR_FORMAT
-                4 -> TYPE_SEND_FEEDBACK
-                else -> TYPE_FOOTER
-            }
+            list.add(TYPE_BECOME_PREMIUM)
         }
-
-    }
-
-    override fun getItemCount(): Int {
-        return if( storage.isUserPremium() ) {
-            8
-        } else {
-            6
+        list.add(TYPE_SHOW_WEAR_OS_LOGO)
+        if( isUserPremium ) {
+            list.add(TYPE_SHOW_COMPLICATIONS_AMBIENT)
         }
+        list.add(TYPE_HOUR_FORMAT)
+        list.add(TYPE_TIME_SIZE)
+        list.add(TYPE_SHOW_FILLED_TIME_AMBIENT)
+        if( isScreenRound ) {
+            list.add(TYPE_SHOW_SECONDS_RING)
+        }
+        list.add(TYPE_SEND_FEEDBACK)
+        list.add(TYPE_FOOTER)
+
+        return list
     }
 
     /** Updates the selected complication id saved earlier with the new information.  */
@@ -276,10 +356,18 @@ class ComplicationConfigRecyclerViewAdapter(
     fun updatePreviewColors() {
         previewAndComplicationsViewHolder?.updateComplicationsAccentColor(storage.getComplicationColors())
     }
+
+
+    fun complicationsPermissionFinished() {
+        val granted = context.isPermissionGranted("com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA")
+
+        showWeatherViewHolder?.setShowWeatherViewSwitchChecked(granted)
+        showWeatherListener(granted)
+    }
 }
 
 enum class ComplicationLocation {
-    LEFT, MIDDLE, RIGHT
+    LEFT, MIDDLE, RIGHT, BOTTOM
 }
 
 class ColorPickerViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
@@ -309,9 +397,11 @@ class PreviewAndComplicationsViewHolder(
     private val leftComplicationBackground: ImageView = view.findViewById(R.id.left_complication_background)
     private val middleComplicationBackground: ImageView = view.findViewById(R.id.middle_complication_background)
     private val rightComplicationBackground: ImageView = view.findViewById(R.id.right_complication_background)
+    private val bottomComplicationBackground: ImageView = view.findViewById(R.id.bottom_complication_background)
     private val leftComplication: ImageButton = view.findViewById(R.id.left_complication)
     private val middleComplication: ImageButton = view.findViewById(R.id.middle_complication)
     private val rightComplication: ImageButton = view.findViewById(R.id.right_complication)
+    private val bottomComplication: ImageButton = view.findViewById(R.id.bottom_complication)
     private var addComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.add_complication)!!
     private var addedComplicationDrawable: Drawable = view.context.getDrawable(R.drawable.added_complication)!!
 
@@ -319,12 +409,14 @@ class PreviewAndComplicationsViewHolder(
         leftComplication.setOnClickListener(this)
         middleComplication.setOnClickListener(this)
         rightComplication.setOnClickListener(this)
+        bottomComplication.setOnClickListener(this)
     }
 
     fun setDefaultComplicationDrawable() {
         leftComplication.setImageDrawable(addComplicationDrawable)
         middleComplication.setImageDrawable(addComplicationDrawable)
         rightComplication.setImageDrawable(addComplicationDrawable)
+        bottomComplication.setImageDrawable(addComplicationDrawable)
     }
 
     override fun onClick(view: View) {
@@ -332,6 +424,7 @@ class PreviewAndComplicationsViewHolder(
             leftComplication -> { listener(ComplicationLocation.LEFT) }
             middleComplication -> { listener(ComplicationLocation.MIDDLE) }
             rightComplication -> { listener(ComplicationLocation.RIGHT) }
+            bottomComplication -> { listener(ComplicationLocation.BOTTOM) }
         }
     }
 
@@ -366,6 +459,14 @@ class PreviewAndComplicationsViewHolder(
                     complicationProviderInfo,
                     rightComplication,
                     rightComplicationBackground,
+                    complicationColors
+                )
+            }
+            ComplicationLocation.BOTTOM -> {
+                updateComplicationView(
+                    complicationProviderInfo,
+                    bottomComplication,
+                    bottomComplicationBackground,
                     complicationColors
                 )
             }
@@ -404,6 +505,12 @@ class PreviewAndComplicationsViewHolder(
             middleComplication.setColorFilter(Color.WHITE)
         } else {
             middleComplication.setColorFilter(colors.middleColor)
+        }
+
+        if( bottomComplication.drawable == addComplicationDrawable ) {
+            bottomComplication.setColorFilter(Color.WHITE)
+        } else {
+            bottomComplication.setColorFilter(colors.bottomColor)
         }
     }
 }
@@ -488,5 +595,85 @@ class ShowComplicationsAmbientViewHolder(view: View,
 
     fun setShowComplicationsAmbientSwitchChecked(checked: Boolean) {
         showComplicationsAmbientSwitch.isChecked = checked
+    }
+}
+
+class ShowFilledTimeAmbientViewHolder(view: View,
+                                      showFilledTimeClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showFilledTimeSwitch: Switch = view as Switch
+
+    init {
+        showFilledTimeSwitch.setOnCheckedChangeListener { _, checked ->
+            showFilledTimeClickListener(!checked)
+        }
+    }
+
+    fun setShowFilledTimeSwitchChecked(checked: Boolean) {
+        showFilledTimeSwitch.isChecked = !checked
+    }
+}
+
+class TimeSizeViewHolder(view: View,
+                         timeSizeChanged: (Int) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val timeSizeSeekBar: SeekBar = view.findViewById(R.id.time_size_seek_bar)
+    private val timeSizeText: TextView = view.findViewById(R.id.time_size_text)
+    private val stepSize = 25
+
+    init {
+        timeSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val convertedProgress = (progress / stepSize) * stepSize
+                seekBar.progress = convertedProgress
+                setText(convertedProgress)
+
+                timeSizeChanged(convertedProgress)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    fun setTimeSize(size: Int) {
+        timeSizeSeekBar.setProgress(size, false)
+        setText(size)
+    }
+
+    private fun setText(size: Int) {
+        timeSizeText.text = itemView.context.getString(
+            R.string.config_time_size,
+            itemView.context.timeSizeToHumanReadableString(size)
+        )
+    }
+}
+
+class ShowSecondsRingViewHolder(view: View,
+                                showSecondsRingClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showSecondsRingSwitch: Switch = view as Switch
+
+    init {
+        showSecondsRingSwitch.setOnCheckedChangeListener { _, checked ->
+            showSecondsRingClickListener(checked)
+        }
+    }
+
+    fun setShowSecondsRingSwitchChecked(checked: Boolean) {
+        showSecondsRingSwitch.isChecked = checked
+    }
+}
+
+class ShowWeatherViewHolder(view: View,
+                            showWeatherViewHolderClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showWeatherViewSwitch: Switch = view as Switch
+
+    init {
+        showWeatherViewSwitch.setOnCheckedChangeListener { _, checked ->
+            showWeatherViewHolderClickListener(checked)
+        }
+    }
+
+    fun setShowWeatherViewSwitchChecked(checked: Boolean) {
+        showWeatherViewSwitch.isChecked = checked
     }
 }

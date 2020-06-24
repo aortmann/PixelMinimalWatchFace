@@ -56,6 +56,14 @@ class ComplicationConfigActivity : Activity() {
             storage.setShouldShowWearOSLogo(showWearOSLogo)
         }, { showComplicationsAmbient ->
             storage.setShouldShowComplicationsInAmbientMode(showComplicationsAmbient)
+        }, { showFilledTimeAmbient ->
+            storage.setShouldShowFilledTimeInAmbientMode(showFilledTimeAmbient)
+        }, { timeSize ->
+            storage.setTimeSize(timeSize)
+        }, { showSecondsRing ->
+            storage.setShouldShowSecondsRing(showSecondsRing)
+        }, { showWeather ->
+            storage.setShouldShowWeather(showWeather)
         })
 
         wearable_recycler_view.isEdgeItemsCenteringEnabled = true
@@ -77,6 +85,8 @@ class ComplicationConfigActivity : Activity() {
             adapter.updateSelectedComplication(complicationProviderInfo)
         } else if (requestCode == UPDATE_COLORS_CONFIG_REQUEST_CODE && resultCode == RESULT_OK) {
             adapter.updatePreviewColors()
+        } else if( requestCode == COMPLICATION_PERMISSION_REQUEST_CODE ) {
+            adapter.complicationsPermissionFinished()
         }
     }
 
@@ -161,5 +171,6 @@ class ComplicationConfigActivity : Activity() {
     companion object {
         const val COMPLICATION_CONFIG_REQUEST_CODE = 1001
         const val UPDATE_COLORS_CONFIG_REQUEST_CODE = 1002
+        const val COMPLICATION_PERMISSION_REQUEST_CODE = 1003
     }
 }

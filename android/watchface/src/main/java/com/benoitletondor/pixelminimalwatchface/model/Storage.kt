@@ -17,6 +17,7 @@ package com.benoitletondor.pixelminimalwatchface.model
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.benoitletondor.pixelminimalwatchface.helper.DEFAULT_TIME_SIZE
 
 private const val SHARED_PREFERENCES_NAME = "pixelMinimalSharedPref"
 
@@ -29,6 +30,10 @@ private const val KEY_RATING_NOTIFICATION_SENT = "ratingNotificationSent"
 private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
 private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
+private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
+private const val KEY_TIME_SIZE = "timeSize"
+private const val KEY_SECONDS_RING = "secondsRing"
+private const val KEY_SHOW_WEATHER = "showWeather"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -46,6 +51,14 @@ interface Storage {
     fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean)
     fun shouldShowComplicationsInAmbientMode(): Boolean
     fun setShouldShowComplicationsInAmbientMode(show: Boolean)
+    fun shouldShowFilledTimeInAmbientMode(): Boolean
+    fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
+    fun getTimeSize(): Int
+    fun setTimeSize(timeSize: Int)
+    fun shouldShowSecondsRing(): Boolean
+    fun setShouldShowSecondsRing(showSecondsRing: Boolean)
+    fun shouldShowWeather(): Boolean
+    fun setShouldShowWeather(show: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -53,6 +66,23 @@ class StorageImpl : Storage {
 
     private lateinit var appContext: Context
     private lateinit var sharedPreferences: SharedPreferences
+
+    // Those values will be called up to 60 times a minute when not in ambient mode
+    // SharedPreferences uses a map so we cache the values to avoid map lookups
+    private var timeSizeCached = false
+    private var cacheTimeSize = 0
+    private var isUserPremiumCached = false
+    private var cacheIsUserPremium = false
+    private var isUse24hFormatCached = false
+    private var cacheUse24hFormat = false
+    private var shouldShowWearOSLogoCached = false
+    private var cacheShouldShowWearOSLogo = false
+    private var shouldShowComplicationsInAmbientModeCached = false
+    private var cacheShouldShowComplicationsInAmbientMode = false
+    private var shouldShowSecondsSettingCached = false
+    private var cacheShouldShowSecondsSetting = false
+    private var shouldShowWeatherCached = false
+    private var cacheShouldShowWeather = false
 
     fun init(context: Context): Storage {
         if( !initialized ) {
@@ -83,6 +113,7 @@ class StorageImpl : Storage {
             color,
             color,
             color,
+            color,
             "TODO", // FIXME
             false
         )
@@ -98,19 +129,35 @@ class StorageImpl : Storage {
     }
 
     override fun isUserPremium(): Boolean {
-        return sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+        if( !isUserPremiumCached ) {
+            cacheIsUserPremium = sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+            isUserPremiumCached = true
+        }
+
+        return cacheIsUserPremium
     }
 
     override fun setUserPremium(premium: Boolean) {
+        cacheIsUserPremium = premium
+        isUserPremiumCached = true
+
         sharedPreferences.edit().putBoolean(KEY_USER_PREMIUM, premium).apply()
     }
 
     override fun setUse24hTimeFormat(use: Boolean) {
+        cacheUse24hFormat = use
+        isUse24hFormatCached = true
+
         sharedPreferences.edit().putBoolean(KEY_USE_24H_TIME_FORMAT, use).apply()
     }
 
     override fun getUse24hTimeFormat(): Boolean {
-        return sharedPreferences.getBoolean(KEY_USE_24H_TIME_FORMAT, true)
+        if( !isUse24hFormatCached ) {
+            cacheUse24hFormat = sharedPreferences.getBoolean(KEY_USE_24H_TIME_FORMAT, true)
+            isUse24hFormatCached = true
+        }
+
+        return cacheUse24hFormat
     }
 
     override fun getInstallTimestamp(): Long {
@@ -134,18 +181,90 @@ class StorageImpl : Storage {
     }
 
     override fun shouldShowWearOSLogo(): Boolean {
-        return sharedPreferences.getBoolean(KEY_SHOW_WEAR_OS_LOGO, true)
+        if( !shouldShowWearOSLogoCached ) {
+            cacheShouldShowWearOSLogo = sharedPreferences.getBoolean(KEY_SHOW_WEAR_OS_LOGO, true)
+            shouldShowWearOSLogoCached = true
+        }
+
+        return cacheShouldShowWearOSLogo
     }
 
     override fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean) {
+        cacheShouldShowWearOSLogo = shouldShowWearOSLogo
+        shouldShowWearOSLogoCached = true
+
         sharedPreferences.edit().putBoolean(KEY_SHOW_WEAR_OS_LOGO, shouldShowWearOSLogo).apply()
     }
 
     override fun shouldShowComplicationsInAmbientMode(): Boolean {
-        return sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+        if( !shouldShowComplicationsInAmbientModeCached ) {
+            cacheShouldShowComplicationsInAmbientMode = sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+            shouldShowComplicationsInAmbientModeCached = true
+        }
+
+        return cacheShouldShowComplicationsInAmbientMode
     }
 
     override fun setShouldShowComplicationsInAmbientMode(show: Boolean) {
+        cacheShouldShowComplicationsInAmbientMode = show
+        shouldShowComplicationsInAmbientModeCached = true
+
         sharedPreferences.edit().putBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, show).apply()
+    }
+
+    override fun shouldShowFilledTimeInAmbientMode(): Boolean {
+        return sharedPreferences.getBoolean(KEY_FILLED_TIME_AMBIENT, false)
+    }
+
+    override fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
+    }
+
+    override fun getTimeSize(): Int {
+        if( !timeSizeCached ) {
+            cacheTimeSize = sharedPreferences.getInt(KEY_TIME_SIZE, DEFAULT_TIME_SIZE)
+            timeSizeCached = true
+        }
+
+        return cacheTimeSize
+    }
+
+    override fun setTimeSize(timeSize: Int) {
+        cacheTimeSize = timeSize
+        timeSizeCached = true
+
+        sharedPreferences.edit().putInt(KEY_TIME_SIZE, timeSize).apply()
+    }
+
+    override fun shouldShowSecondsRing(): Boolean {
+        if( !shouldShowSecondsSettingCached ) {
+            cacheShouldShowSecondsSetting = sharedPreferences.getBoolean(KEY_SECONDS_RING, false)
+            shouldShowSecondsSettingCached = true
+        }
+
+        return cacheShouldShowSecondsSetting
+    }
+
+    override fun setShouldShowSecondsRing(showSecondsRing: Boolean) {
+        cacheShouldShowSecondsSetting = showSecondsRing
+        shouldShowSecondsSettingCached = true
+
+        sharedPreferences.edit().putBoolean(KEY_SECONDS_RING, showSecondsRing).apply()
+    }
+
+    override fun shouldShowWeather(): Boolean {
+        if( !shouldShowWeatherCached ) {
+            cacheShouldShowWeather = sharedPreferences.getBoolean(KEY_SHOW_WEATHER, false)
+            shouldShowWeatherCached = true
+        }
+
+        return cacheShouldShowWeather
+    }
+
+    override fun setShouldShowWeather(show: Boolean) {
+        cacheShouldShowWeather = show
+        shouldShowWeatherCached = true
+
+        sharedPreferences.edit().putBoolean(KEY_SHOW_WEATHER, show).apply()
     }
 }

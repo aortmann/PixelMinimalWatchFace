@@ -30,10 +30,13 @@ android {
         applicationId "com.benoitletondor.pixelminimalwatchface"
         minSdkVersion 25
         targetSdkVersion 29
-        versionCode 10013
-        versionName "1.1.0"
+        versionCode 10031
+        versionName "1.4.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "WATCH_FACE_APP_PLAYSTORE_URL", '"https://play.google.com/store/apps/details?id=com.benoitletondor.pixelminimalwatchface"'
+        buildConfigField "String", "WATCH_CAPABILITY", '"verify_com_benoitletondor_pixelminimalwatchface"'
     }
 
     signingConfigs {
@@ -73,21 +76,23 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
 
-    implementation 'com.google.firebase:firebase-analytics:17.2.2'
-    implementation 'com.google.firebase:firebase-crashlytics:17.0.0-beta01'
-    implementation 'com.google.firebase:firebase-config:19.1.1'
+    implementation 'com.google.firebase:firebase-analytics:17.4.2'
+    implementation 'com.google.firebase:firebase-crashlytics:17.0.0'
+    implementation 'com.google.firebase:firebase-config:19.1.4'
 
-    implementation 'org.koin:koin-core:2.0.1'
-    implementation 'org.koin:koin-android:2.0.1'
-    implementation 'org.koin:koin-android-viewmodel:2.0.1'
+    implementation 'org.koin:koin-core:2.1.5'
+    implementation 'org.koin:koin-android:2.1.5'
+    implementation 'org.koin:koin-android-viewmodel:2.1.5'
 
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
+    implementation 'com.google.android.support:wearable:2.7.0'
+    compileOnly 'com.google.android.wearable:wearable:2.7.0'
 
-    implementation 'com.android.billingclient:billing:2.1.0'
-    implementation 'com.android.billingclient:billing-ktx:2.1.0'
+    implementation 'com.android.billingclient:billing:2.2.1'
+    implementation 'com.android.billingclient:billing-ktx:2.2.1'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.6'
 
     implementation 'me.relex:circleindicator:2.1.4@aar'
 }

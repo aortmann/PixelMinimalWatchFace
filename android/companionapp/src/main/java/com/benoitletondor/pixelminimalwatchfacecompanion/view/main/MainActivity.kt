@@ -18,20 +18,21 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.main
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.lifecycle.Observer
 import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
+import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
-import org.koin.android.viewmodel.ext.android.viewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import org.koin.android.viewmodel.ext.android.viewModel
 import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
@@ -57,6 +58,21 @@ class MainActivity : AppCompatActivity() {
                     main_activity_premium_view.visibility = View.GONE
                     main_activity_syncing_view.visibility = View.GONE
                     main_activity_error_view.visibility = View.GONE
+                    when( val installedStatus = state.appInstalledStatus ) {
+                        is MainViewModel.AppInstalledStatus.Result -> {
+                            if( installedStatus.wearableStatus == Sync.WearableStatus.AvailableAppNotInstalled ) {
+                                main_activity_not_premium_view_install_button.visibility = View.VISIBLE
+                                main_activity_not_premium_view_not_premium_install_text.visibility = View.GONE
+                            } else {
+                                main_activity_not_premium_view_install_button.visibility = View.GONE
+                                main_activity_not_premium_view_not_premium_install_text.visibility = View.VISIBLE
+                            }
+                        }
+                        else -> {
+                            main_activity_not_premium_view_install_button.visibility = View.GONE
+                            main_activity_not_premium_view_not_premium_install_text.visibility = View.VISIBLE
+                        }
+                    }
                 }
                 is MainViewModel.State.Syncing -> {
                     main_activity_not_premium_view.visibility = View.GONE
@@ -71,6 +87,37 @@ class MainActivity : AppCompatActivity() {
                     main_activity_premium_view.visibility = View.VISIBLE
                     main_activity_syncing_view.visibility = View.GONE
                     main_activity_error_view.visibility = View.GONE
+                    when( val installedStatus = state.appInstalledStatus ) {
+                        MainViewModel.AppInstalledStatus.Verifying -> {
+                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_loading)
+                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.VISIBLE
+                            main_activity_premium_view_install_button.visibility = View.GONE
+                            main_activity_premium_view_sync_button.visibility = View.GONE
+                        }
+                        is MainViewModel.AppInstalledStatus.Result -> {
+                            when( installedStatus.wearableStatus ) {
+                                Sync.WearableStatus.AvailableAppNotInstalled -> {
+                                    main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_not_installed)
+                                    main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
+                                    main_activity_premium_view_install_button.visibility = View.VISIBLE
+                                    main_activity_premium_view_sync_button.visibility = View.VISIBLE
+                                }
+                                Sync.WearableStatus.AvailableAppInstalled -> {
+                                    main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_installed)
+                                    main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
+                                    main_activity_premium_view_install_button.visibility = View.GONE
+                                    main_activity_premium_view_sync_button.visibility = View.VISIBLE
+                                }
+                                else -> {
+                                    main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_unknown)
+                                    main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
+                                    main_activity_premium_view_install_button.visibility = View.GONE
+                                    main_activity_premium_view_sync_button.visibility = View.VISIBLE
+                                }
+                            }
+
+                        }
+                    }
                 }
                 is MainViewModel.State.Error -> {
                     main_activity_not_premium_view.visibility = View.GONE
@@ -99,11 +146,13 @@ class MainActivity : AppCompatActivity() {
         main_activity_not_premium_view_not_premium_view_pager_indicator.setViewPager(main_activity_not_premium_view_not_premium_view_pager)
 
         viewModel.errorSyncingEvent.observe(this, Observer { syncingError ->
-            AlertDialog.Builder(this)
-                .setTitle(R.string.error_syncing_title)
-                .setMessage(getString(R.string.error_syncing_message, syncingError.message))
-                .setPositiveButton(android.R.string.ok, null)
-                .show()
+            if( main_activity_premium_view?.visibility == View.VISIBLE ) {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.error_syncing_title)
+                    .setMessage(getString(R.string.error_syncing_message, syncingError.message))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
         })
 
         viewModel.errorPayingEvent.observe(this, Observer { paymentError ->
@@ -132,6 +181,18 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        viewModel.openPlayStoreStatusEvent.observe(this, Observer { opened ->
+            if( opened ) {
+                Toast.makeText(this, R.string.playstore_opened_on_watch_message, Toast.LENGTH_LONG).show()
+            } else {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.playstore_not_opened_on_watch_title)
+                    .setMessage(R.string.playstore_not_opened_on_watch_message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        })
+
         main_activity_error_view_retry_button.setOnClickListener {
             viewModel.retryPremiumStatusCheck()
         }
@@ -146,6 +207,14 @@ class MainActivity : AppCompatActivity() {
 
         main_activity_not_premium_view_promocode_button.setOnClickListener {
             showRedeemVoucherUI()
+        }
+
+        main_activity_premium_view_install_button.setOnClickListener {
+            viewModel.onInstallWatchFaceButtonPressed()
+        }
+
+        main_activity_not_premium_view_install_button.setOnClickListener {
+            viewModel.onInstallWatchFaceButtonPressed()
         }
     }
 
